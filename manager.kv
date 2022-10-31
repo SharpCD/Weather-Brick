@@ -1,0 +1,557 @@
+ScreenManager:
+    Loading:
+    LogIn:
+    MenuWindow:
+    ClothesWindow:
+    Map:
+    Place:
+
+<Loading>
+    name: 'loading'
+    MDFloatLayout:
+        Image:
+            id: img
+            source: 'Data/Image//loading.png'
+
+<LogIn>
+    name: 'log_in'
+    entry: entry
+    email: email
+    entry_btn:entry_btn
+    password:password
+    sign_up_btn:sign_up_btn
+    MDFloatLayout:
+        Image:
+            id: img
+            source: 'Data/Image//back.png'
+        MDFloatLayout:
+            size_hint: (.9, .3)
+            pos_hint:{'center_x': .5, 'center_y': .5}
+            canvas:
+                Color:
+                    rgb: rgba(196, 191, 196, 255)
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [20, 20, 20, 20]
+            TextInput:
+                id:email
+                multiline:False
+                hint_text:'Email'
+                font_size:
+                background_color: 1, 1, 1, 0
+                pos_hint:{'center_x': .55, 'center_y': .35}
+                foreground_color: rgba(135, 135, 135, 255)
+            MDFloatLayout:
+                size_hint: (.9, .01)
+                pos_hint:{'center_x': .5, 'center_y': .7}
+                md_bg_color: rgba(178, 178, 178, 255)
+            TextInput:
+                id:password
+                multiline:False
+                hint_text:'Пароль'
+                font_size:
+                background_color: 1, 1, 1, 0
+                pos_hint:{'center_x': .55, 'center_y': .19}
+                foreground_color: rgba(135, 135, 135, 255)
+                password: True
+            MDFloatLayout:
+                size_hint: (.9, .01)
+                pos_hint:{'center_x': .5, 'center_y': .54}
+                md_bg_color: rgba(178, 178, 178, 255)
+            Button:
+                id: entry_btn
+                size_hint: (.9, .14)
+                pos_hint:{'center_x': .5, 'center_y': .4}
+                font_size:
+                text: 'ВОЙТИ'
+                background_color: 1, 1, 1, 0
+                canvas.before:
+                    Color:
+                        rgb: rgba(158,153,163, 255)
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [18, 18, 18, 18]
+            MDRoundFlatButton:
+                id: sign_up_btn
+                text: "ЗАРЕГИСТРИРОВАТЬСЯ"
+                theme_text_color: "Custom"
+                font_size:
+                size_hint: (.9, .14)
+                pos_hint:{ 'center_x': .5, 'center_y': .22}
+                text_color: "white"
+                line_color: "white"
+            MDTextButton:
+                text: "Пропустить"
+                color: rgba(135, 135, 135, 255)
+                pos_hint:{'center_x': .5, 'center_y': .07}
+                on_press:
+                    root.manager.current = 'menu_window'
+                    root.manager.transition.direction = 'left'
+        MDLabel:
+            id: entry
+            font_size:
+            text: 'Вход'
+            pos_hint:{'center_x': .93, 'center_y': .63}
+
+<MenuWindow>
+    name: 'menu_window'
+    btn: btn
+    img: img
+    time: time
+    city:city
+    sost:sost
+    temp:temp
+    prssr: prssr
+    hmdt: hmdt
+    wnd: wnd
+    btn_clothes:btn_clothes
+    text_f0:text_f0
+    text_f1:text_f1
+    text_f2:text_f2
+    text_f3:text_f3
+    text_f4:text_f4
+    text_f5:text_f5
+    text_f6:text_f6
+    text_f7:text_f7
+    text_f8:text_f8
+    text_f9:text_f9
+    img_f0:img_f0
+    img_f1:img_f1
+    img_f2:img_f2
+    img_f3:img_f3
+    img_f4:img_f4
+    img_f5:img_f5
+    img_f6:img_f6
+    img_f7:img_f7
+    img_f8:img_f8
+    img_f9:img_f9
+    text2_f0:text2_f0
+    text2_f1:text2_f1
+    text2_f2:text2_f2
+    text2_f3:text2_f3
+    text2_f4:text2_f4
+    text2_f5:text2_f5
+    text2_f6:text2_f6
+    text2_f7:text2_f7
+    text2_f8:text2_f8
+    text2_f9:text2_f9
+    map_btn: map_btn
+
+    MDFloatLayout:
+
+        Image:
+            id: img
+            source: ''
+        MDFloatLayout:
+            size_hint: (.6, .044)
+            pos_hint:{'x': .2, 'y': .88}
+            canvas:
+                Color:
+                    rgb: rgba(255, 255, 255, 255)
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [10, 10, 10, 10]
+        MDFloatLayout:
+            size_hint: (.6, .044)
+            pos_hint:{'x': .2, 'y': .825}
+            opacity: .12
+            canvas:
+                Color:
+                    rgb: rgba(0, 0, 0, 255)
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [10, 10, 10, 10]
+        MDBoxLayout:
+            orientation: 'vertical'
+            size_hint: (.6, .15)
+            pos_hint:{'x': .2, 'y': .825}
+            spacing:8
+
+            MDLabel:
+                halign: 'center'
+                id: time
+                text: ''
+                font_size:
+                font_name:
+            TextInput:
+                id: city
+                halign: 'center'
+                text: ''
+                hint_text: 'Введите город'
+                font_size:
+                multiline: False
+                padding:
+                background_color: 1, 1, 1, 0
+            Button:
+                id: btn
+                text: 'Узнать погоду'
+                on_release: root.manager.get_screen('menu_window').get_city()
+                background_color: 1, 1, 1, 0
+        Button:
+            id: map_btn
+            background_normal: ''
+            size_hint:
+            pos_hint: {'x': .81, 'y': .91}
+            on_release:
+                root.manager.current = 'place'
+                root.manager.transition.direction = 'left'
+        MDBoxLayout:
+            orientation:"vertical"
+            size_hint: (1, .1)
+            pos_hint:{'x': 0, 'y': .60}
+            spacing: 30
+            MDLabel:
+                halign: 'center'
+                id:sost
+                text:''
+                font_size:
+            MDLabel:
+                halign: 'center'
+                id:temp
+                text:''
+                font_size:
+        MDGridLayout:
+            cols:2
+            size_hint:(.9, .32)
+            pos_hint: {'x': .21, 'y': .147}
+            MDLabel:
+                id: prssr
+                text:''
+                font_size:
+            MDLabel:
+                id: hmdt
+                text:''
+                font_size:
+            MDLabel:
+                id: wnd
+                text:''
+                font_size:
+        Button:
+            id: btn_clothes
+            background_color: 1, 1, 1, 0
+            text: 'Рекомендуемая\nодежда'
+            size_hint:(.3, .05)
+            pos_hint:{'x': .655, 'y': .2048}
+            font_size:
+            on_press:
+                root.manager.transition.direction = 'left'
+                root.manager.current ='clothes_window'
+        MDFloatLayout:
+            size_hint:(1, .17)
+
+            ScrollView:
+                do_scroll_x: True
+                do_scroll_y: False
+
+                GridLayout:
+                    size_hint_x: None
+                    cols:10
+                    spacing: .8
+                    width: self.minimum_width
+                    MDLabel:
+                        id: text_f0
+                        size_hint_x: None
+                        halign: 'center'
+                        font_size:
+                        text: ''
+
+                    MDLabel:
+                        id: text_f1
+                        size_hint_x: None
+                        halign: 'center'
+                        font_size:
+                        text: ''
+
+                    MDLabel:
+                        id: text_f2
+                        size_hint_x: None
+                        halign: 'center'
+                        font_size:
+                        text: ''
+
+                    MDLabel:
+                        id: text_f3
+                        size_hint_x: None
+                        halign: 'center'
+                        font_size:
+                        text: ''
+                    MDLabel:
+                        id: text_f4
+                        size_hint_x: None
+                        halign: 'center'
+                        font_size:
+                        text: ''
+                    MDLabel:
+                        id: text_f5
+                        size_hint_x: None
+                        halign: 'center'
+                        font_size:
+                        text: ''
+                    MDLabel:
+                        id: text_f6
+                        size_hint_x: None
+                        halign: 'center'
+                        font_size:
+                        text: ''
+                    MDLabel:
+                        id: text_f7
+                        size_hint_x: None
+                        halign: 'center'
+                        font_size:
+                        text: ''
+                    MDLabel:
+                        id: text_f8
+                        size_hint_x: None
+                        halign: 'center'
+                        font_size:
+                        text: ''
+                    MDLabel:
+                        id: text_f9
+                        size_hint_x: None
+                        halign: 'center'
+                        font_size:
+                        text: ''
+                    Image:
+                        id: img_f0
+                        source: ''
+
+                    Image:
+                        id: img_f1
+                        source: ''
+
+                    Image:
+                        id: img_f2
+                        source: ''
+
+                    Image:
+                        id: img_f3
+                        source: ''
+
+                    Image:
+                        id: img_f4
+                        source: ''
+
+                    Image:
+                        id: img_f5
+                        source: ''
+
+                    Image:
+                        id: img_f6
+                        source: ''
+
+                    Image:
+                        id: img_f7
+                        source: ''
+
+                    Image:
+                        id: img_f8
+                        source: ''
+
+                    Image:
+                        id: img_f9
+                        source: ''
+                    MDLabel:
+                        id: text2_f0
+                        size_hint_x: None
+                        halign: 'center'
+                        font_size:
+                        text: ''
+
+                    MDLabel:
+                        id: text2_f1
+                        size_hint_x: None
+                        halign: 'center'
+                        font_size:
+                        text: ''
+
+                    MDLabel:
+                        id: text2_f2
+                        size_hint_x: None
+                        halign: 'center'
+                        font_size:
+                        text: ''
+
+                    MDLabel:
+                        id: text2_f3
+                        size_hint_x: None
+                        halign: 'center'
+                        font_size:
+                        text: ''
+
+                    MDLabel:
+                        id: text2_f4
+                        size_hint_x: None
+                        halign: 'center'
+                        font_size:
+                        text: ''
+
+                    MDLabel:
+                        id: text2_f5
+                        size_hint_x: None
+                        halign: 'center'
+                        font_size:
+                        text: ''
+
+                    MDLabel:
+                        id: text2_f6
+                        size_hint_x: None
+                        halign: 'center'
+                        font_size:
+                        text: ''
+
+                    MDLabel:
+                        id: text2_f7
+                        size_hint_x: None
+                        halign: 'center'
+                        font_size:
+                        text: ''
+
+                    MDLabel:
+                        id: text2_f8
+                        size_hint_x: None
+                        halign: 'center'
+                        font_size:
+                        text: ''
+
+                    MDLabel:
+                        id: text2_f9
+                        size_hint_x: None
+                        halign: 'center'
+                        font_size:
+                        text: ''
+
+<ClothesWindow>
+    name: "clothes_window"
+    back: back
+    arrow1: arrow1
+    text1: text1
+    arrow2: arrow2
+    text2: text2
+    male: male
+    female: female
+    slide: slide
+    clothe:clothe
+    MDFloatLayout:
+        Image:
+            id: back
+            source: ''
+        Carousel:
+            id: slide
+            MDFloatLayout:
+                MDIconButton:
+                    id: arrow1
+                    icon: 'arrow-left'
+                    pos_hint:{ 'center_x': .1, 'center_y': .95}
+                    icon_size:
+                    on_press:
+                        root.manager.current = 'menu_window'
+                        root.manager.transition.direction = 'right'
+                MDLabel:
+                    halign: 'center'
+                    id: text1
+                    text:'Выберете пол'
+                    font_size:
+                    pos_hint:{ 'center_x': .5, 'center_y': .9}
+                MDIconButton:
+                    id: male
+                    icon: 'human-male'
+                    pos_hint:{ 'center_x': .25, 'center_y': .5}
+                    icon_size: '90sp'
+                    on_press:
+                        root.manager.get_screen('clothes_window').next1('man/')
+                MDIconButton:
+                    id: female
+                    icon: 'human-female'
+                    pos_hint:{ 'center_x': .75, 'center_y': .5}
+                    icon_size: '90sp'
+                    on_press:
+                        root.manager.get_screen('clothes_window').next1('woman/')
+            MDFloatLayout:
+                MDIconButton:
+                    id: arrow2
+                    icon: 'arrow-left'
+                    pos_hint:{ 'center_x': .1, 'center_y': .95}
+                    icon_size:
+                    on_press:
+                        root.manager.get_screen('clothes_window').back_to_gender()
+                MDLabel:
+                    halign: 'center'
+                    id: text2
+                    text:'Выберете cтиль'
+                    font_size:
+
+                    pos_hint:{ 'center_x': .5, 'center_y': .9}
+
+                MDRoundFlatButton:
+                    text: "classic"
+                    theme_text_color: "Custom"
+                    text_color: "white"
+                    size_hint:(.8, .07)
+                    pos_hint:{ 'center_x': .5, 'center_y': .65}
+                    line_color: "white"
+                    on_press:
+                        root.manager.get_screen('clothes_window').next2('classic//')
+                MDRoundFlatButton:
+                    text: "casual"
+                    theme_text_color: "Custom"
+                    size_hint:(.8, .07)
+                    pos_hint:{ 'center_x': .5, 'center_y': .5}
+                    text_color: "white"
+                    line_color: "white"
+                    on_press:
+                        root.manager.get_screen('clothes_window').next2('casual//')
+                MDRoundFlatButton:
+                    text: "sport"
+                    theme_text_color: "Custom"
+                    size_hint:(.8, .07)
+                    pos_hint:{ 'center_x': .5, 'center_y': .35}
+                    text_color: "white"
+                    line_color: "white"
+                    on_press:
+                        root.manager.get_screen('clothes_window').next2('sport//')
+            MDFloatLayout:
+                Button:
+                    id: clothe
+                    background_normal: ''
+                    on_press: root.manager.get_screen('clothes_window').to_main_window()
+<Place>
+    name: 'place'
+    back: back
+    arrow1:arrow1
+    text1: text1
+    MDFloatLayout:
+        Image:
+            id: back
+            source: ''
+        Image:
+            source: 'Data/Image//build.png'
+    MDIconButton:
+        id: arrow1
+        icon: 'arrow-left'
+        pos_hint:{ 'center_x': .1, 'center_y': .95}
+        icon_size:
+        on_press:
+            root.manager.current = 'menu_window'
+            root.manager.transition.direction = 'right'
+    MDLabel:
+        halign: 'center'
+        id: text1
+        text: 'Выберете категорию'
+        pos_hint:{ 'center_x': .5, 'center_y': .9}
+        font_size:
+
+
+<Map>
+    name: 'map'
+
+
+
+
+
+
+
+
