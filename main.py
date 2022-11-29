@@ -1,666 +1,612 @@
-from kivy.app import App
-from kivy.uix.button import Button
-from kivy.uix.floatlayout import FloatLayout
-from kivy.uix.textinput import TextInput
-from kivy.uix.image import Image
-from kivy.uix.label import Label
+from kivymd.app import MDApp
+from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.clock import Clock
 from kivy.core.window import Window
-from kivy.uix.screenmanager import Screen
-from kivy.uix.boxlayout import BoxLayout
 from kivy.core.audio import SoundLoader
-from kivy.uix.screenmanager import ScreenManager
-from kivy.uix.gridlayout import GridLayout
-from kivy.uix.scrollview import ScrollView
-import requests
-from datetime import datetime, timezone, timedelta
+from kivy.lang import Builder
+import kivy.properties as kyprops
+from kivy_garden.mapview import MapView
+from kivy_garden.mapview import MapMarkerPopup
+from kivy_garden.xcamera import XCamera
+import requests, re, json, os
 # from plyer import gps
-import os
+from hashlib import pbkdf2_hmac
 from random import choice
-import webbrowser
+from kivy.input.motionevent import MotionEvent
+from kivymd.uix.button import MDFlatButton
+from kivymd.uix.fitimage import FitImage
+
+from client import Client
+from kivymd.uix.snackbar import Snackbar
+from kivy.core.text import LabelBase
+from GeoLoc import GeoLoc
+from kivymd.uix.label import MDLabel
+from kivy.uix.image import Image
+from kivymd.uix.bottomsheet import MDListBottomSheet
+from kivymd.uix.expansionpanel import MDExpansionPanelOneLine, MDExpansionPanel
+from kivymd.uix.list import TwoLineIconListItem
+from kivymd.uix.boxlayout import MDBoxLayout
+from kivymd.uix.list.list import IconLeftWidget
+# LabelBase.register(name = 'Mirava Personal Use Only',  fn_regular='MiravaRegularPersonalUseOnl.ttf')
+from kivy.animation import Animation
+from kivymd.uix.dialog import MDDialog
+regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
 
 
+class Loading(Screen):
+    def on_enter(self, *args):
+        Clock.schedule_once(self.login, 2)
 
-class LogIn(Screen):
-    def __init__(self,  **kwargs):
-        super(LogIn, self).__init__(**kwargs)
+    def login(self, *args):
+        self.manager.get_screen('menu_window').weather_at_city(geo)
+        self.manager.get_screen('sign_in').enter()
+        self.manager.current = 'sign_in'
 
 
-    def on_enter(self):
-        fl = FloatLayout()
-        img = Image(source = 'Data/Image//log in.png')
-        fl.add_widget(img)
-        bl = BoxLayout(orientation="vertical", size_hint=(.8, .18), pos_hint={'x': .1, 'y': .395}, spacing=8)
-        fl.add_widget(Label(
-            text = 'Вход',
-            font_size=Window.height / 30,
-            pos_hint={'x': .020, 'y': .1},
-            color = 'black'
+class SignIn(Screen):
 
-        ))
-        self.email = TextInput(multiline=False, hint_text='Email', font_size=Window.height / 50, background_normal = '')
-        self.password = TextInput(multiline=False, hint_text='Пароль', font_size=Window.height / 50, password = True, background_normal = '')
-        bl.add_widget(self.email)
-        bl.add_widget(self.password)
-        bl.add_widget(Button(
-            text = 'ВОЙТИ',
-            font_size=Window.height / 40,
-            background_normal = '',
-            background_color = [.62, .60, .64]
-        ))
-        bl.add_widget(Button(
-            text='ЗАРЕГИСТРИРОВАТЬСЯ',
-            font_size=Window.height / 40,
-            background_normal="Data/Image//button.png",
-            color='black',
-            on_press=lambda x:
-            set_screen_l('sign_up'),
-        ))
-        fl.add_widget(Button(
-            text = 'Пропустить',
-            font_size=Window.height / 60,
-            size_hint=(.3, .05),
-            pos_hint={'x': .66, 'y': .36},
-            background_normal="Data/Image//button.png",
-            color='gray',
-            on_press=lambda x:
-            set_screen_l('menu_window'),
-        ))
-        fl.add_widget(bl)
-        self.add_widget(fl)
+    def enter(self):
+        # back = 'Data/Image/loading '+ self.manager.get_screen('menu_window').ids.img.source[11:]
+        color =''
+        self.entry.font_size = Window.height / 24
+        self.email.font_size = Window.height / 50
+        self.password.font_size = Window.height / 50
+        self.next_btn.font_size = Window.height / 40
+        self.previous_btn.font_size = Window.height / 40
+        self.log_in_btn.font_size = Window.height / 40
+        self.sign_up_btn.font_size = Window.height / 40
+        self.frgt_password.font_size = Window.height / 48
+        self.skip.font_size = Window.height / 48
+        self.back.source = back
+        self.card.md_bg_color = color_card
+        self.manager.get_screen('sign_up').enter()
+
+    def next(self):
+        self.salt = Client(operation='get_salt', email=self.email.text)
+        self.salt.start()
+        self.salt = self.salt.task()
+        if self.salt == 'None':
+            Snackbar(
+                text="  Введите корректный Email",
+                snackbar_animation_dir='Top',
+                bg_color='#CF5A5D',
+                shadow_color='#CF5A5D',
+                font_size=Window.height // 44,
+                snackbar_x=f"{Window.height // 44}dp",
+                snackbar_y=f"{Window.height // 1.1}dp",
+                size_hint_x=.9,
+                radius=[20, 20, 20, 20]
+            ).open()
+        else:
+            self.manager.get_screen('sign_in').slide.load_next(mode='next')
+
+    def log_in_information(self):
+        password = self.manager.get_screen('sign_in').ids.password.text.encode()
+        password = pbkdf2_hmac('sha256', password, self.salt.encode('utf-8'), 10000)
+        log_in = Client(operation='log_in',
+                        email=self.email.text,
+                        password=password.hex()
+                        )
+        log_in.start()
+        log_in = log_in.task()
+        if log_in == 'null':
+            Snackbar(
+                text="  Неправильный пароль",
+                snackbar_animation_dir='Top',
+                bg_color='#CF5A5D',
+                shadow_color='#CF5A5D',
+                font_size=Window.height // 44,
+                snackbar_x=f"{Window.height // 44}dp",
+                snackbar_y=f"{Window.height // 1.1}dp",
+                size_hint_x=.9,
+                radius=[20, 20, 20, 20]
+            ).open()
+        else:
+            self.manager.current = 'menu_window'
+            self.manager.transition.direction = 'left'
+
+    def previous(self):
+        self.manager.get_screen('sign_in').slide.load_previous()
+
 
 class SignUp(Screen):
-    def __init__(self,  **kwargs):
-        super(SignUp, self).__init__(**kwargs)
 
-    def on_enter(self):
-        fl = FloatLayout()
-        img = Image(source = 'Data/Image//sign up.png')
-        fl.add_widget(img)
-        bl = BoxLayout(orientation="vertical", size_hint=(.8, .25), pos_hint={'x': .1, 'y': .33}, spacing=8)
-        fl.add_widget(Label(
-            text = 'Регистрация',
-            font_size=self.height / 35,
-            pos_hint={'x': .020, 'y': .11},
-            color = 'black'
+    def enter(self):
+        self.frst_name.font_size = Window.height / 50
+        self.last_name.font_size = Window.height / 50
+        self.next_btn1.font_size = Window.height / 45
+        self.next_btn2.font_size = Window.height / 45
+        self.next_btn3.font_size = Window.height / 45
+        self.sign_in_btn.font_size = Window.height / 45
+        self.previous_btn1.font_size = Window.height / 45
+        self.previous_btn2.font_size = Window.height / 45
+        self.num1.icon_size = f'{Window.height // 25}sp'
+        self.num2.icon_size = f'{Window.height // 25}sp'
+        self.num3.icon_size = f'{Window.height // 25}sp'
+        self.manager.get_screen('email_confirmation').enter()
 
-        ))
-        self.name_user = TextInput(multiline=False, hint_text='Имя', font_size=self.height / 50, background_normal = '')
-        self.lstname = TextInput(multiline=False, hint_text='Фамилия', font_size=self.height / 50, background_normal = '')
-        self.email = TextInput(multiline=False, hint_text='Email', font_size=self.height / 50, background_normal = '')
-        self.password = TextInput(multiline=False, hint_text='Пароль', font_size=self.height / 50, password = True, background_normal = '')
-        self.ppassword = TextInput(multiline=False, hint_text='Повторите пароль', font_size=self.height / 50, password = True, background_normal = '')
-        bl.add_widget(self.name_user)
-        bl.add_widget(self.lstname)
-        bl.add_widget(self.email)
-        bl.add_widget(self.password)
-        bl.add_widget(self.ppassword)
+    def next1(self):
+        if len(self.frst_name.text) != 0 and len(self.last_name.text) != 0:
+            self.num1.icon = 'checkbox-marked-circle'
+            self.manager.get_screen('sign_up').slide.load_next(mode='next')
+            self.progressbar1.value = 100
+            self.num1.icon_color = '#309AEB'
+        elif len(self.frst_name.text) == 0:
+            Snackbar(
+                text="  Введите имя",
+                snackbar_animation_dir='Top',
+                bg_color='#CF5A5D',
+                shadow_color='#CF5A5D',
+                font_size=Window.height // 44,
+                snackbar_x=f"{Window.height // 44}dp",
+                snackbar_y=f"{Window.height // 1.1}dp",
+                size_hint_x=.9,
+                radius=[20, 20, 20, 20]
+            ).open()
+        elif len(self.last_name.text) == 0:
+            Snackbar(
+                text="  Введите фамилию",
+                snackbar_animation_dir='Top',
+                bg_color='#CF5A5D',
+                shadow_color='#CF5A5D',
+                font_size=Window.height // 44,
+                snackbar_x=f"{Window.height // 44}dp",
+                snackbar_y=f"{Window.height // 1.1}dp",
+                size_hint_x=.9,
+                radius=[20, 20, 20, 20]
+            ).open()
 
-        bl.add_widget(Button(
-            text='ЗАРЕГИСТРИРОВАТЬСЯ',
-            font_size=self.height / 40,
-            background_normal="Data/Image//button.png",
-            color='black',
-            on_press = self.check_inf
-        ))
-        fl.add_widget(Button(
-            on_press=lambda x: set_screen_r('log_in'),
-            background_normal="Data/Image//pointer.png",
-            background_down="Data/Image//pointer.png",
-            size_hint=(.18, .0783),
-            pos_hint={'x': .03, 'y': .92},
-        ))
-        fl.add_widget(bl)
+    def next2(self):
+        if len(self.email.text) != 0 and len(self.number.text) != 0 and re.fullmatch(regex, self.email.text):
+            requests_email = Client(operation='email_in_db', email=self.email.text)
+            requests_email.start()
+            self.task = requests_email.task()
+            if self.task == 'None':
+                self.num2.icon = 'checkbox-marked-circle'
+                self.num2.icon_color = '#309AEB'
+                self.progressbar2.value = 100
+                self.manager.get_screen('sign_up').slide.load_next(mode='next')
+            else:
+                Snackbar(
+                    text="На этот Email уже зарегистрирован аккаунт",
+                    snackbar_animation_dir='Top',
+                    bg_color='#CF5A5D',
+                    shadow_color='#CF5A5D',
+                    font_size=Window.height // 53,
+                    snackbar_x=f"{Window.height // 44}dp",
+                    snackbar_y=f"{Window.height // 1.1}dp",
+                    size_hint_x=.9,
+                    radius=[20, 20, 20, 20]
+                ).open()
+        elif len(self.email.text) == 0:
+            Snackbar(
+                text="  Введите Email",
+                snackbar_animation_dir='Top',
+                bg_color='#CF5A5D',
+                shadow_color='#CF5A5D',
+                font_size=Window.height // 44,
+                snackbar_x=f"{Window.height // 44}dp",
+                snackbar_y=f"{Window.height // 1.1}dp",
+                size_hint_x=.9,
+                radius=[20, 20, 20, 20]
+            ).open()
+        elif not re.fullmatch(regex, self.email.text):
+            Snackbar(
+                text="  Введите корректный Email",
+                snackbar_animation_dir='Top',
+                bg_color='#CF5A5D',
+                shadow_color='#CF5A5D',
+                font_size=Window.height // 44,
+                snackbar_x=f"{Window.height // 44}dp",
+                snackbar_y=f"{Window.height // 1.1}dp",
+                size_hint_x=.9,
+                radius=[20, 20, 20, 20]
+            ).open()
 
-        self.add_widget(fl)
+        elif len(self.number.text) == 0:
+            Snackbar(
+                text="  Введите номер телефона",
+                snackbar_animation_dir='Top',
+                bg_color='#CF5A5D',
+                shadow_color='#CF5A5D',
+                font_size=Window.height // 44,
+                snackbar_x=f"{Window.height // 44}dp",
+                snackbar_y=f"{Window.height // 1.1}dp",
+                size_hint_x=.9,
+                radius=[20, 20, 20, 20]
+            ).open()
+
+    def next3(self):
+        if len(self.password.text) != 0 and len(
+                self.repeat_password.text) != 0 and self.password.text == self.repeat_password.text:
+            self.num3.icon = 'checkbox-marked-circle'
+            self.num3.icon_color = '#309AEB'
+            self.manager.get_screen('sign_up').slide.load_next(mode='next')
+            self.manager.transition.direction = 'left'
+            self.manager.current = 'email_confirmation'
+        elif len(self.password.text) == 0:
+            Snackbar(
+                text="  Введите пароль",
+                snackbar_animation_dir='Top',
+                bg_color='#CF5A5D',
+                shadow_color='#CF5A5D',
+                font_size=Window.height // 44,
+                snackbar_x=f"{Window.height // 44}dp",
+                snackbar_y=f"{Window.height // 1.1}dp",
+                size_hint_x=.9,
+                radius=[20, 20, 20, 20]
+            ).open()
+        elif self.password.text != self.repeat_password.text:
+            Snackbar(
+                text="  Пароли не совпадают",
+                snackbar_animation_dir='Top',
+                bg_color='#CF5A5D',
+                shadow_color='#CF5A5D',
+                font_size=Window.height // 44,
+                snackbar_x=f"{Window.height // 44}dp",
+                snackbar_y=f"{Window.height // 1.1}dp",
+                size_hint_x=.9,
+                radius=[20, 20, 20, 20]
+            ).open()
+            self.password.text = ''
+            self.repeat_password.text = ''
+
+    def previous1(self):
+        self.manager.transition.direction = 'right'
+        self.manager.current = 'sign_in'
+
+    def previous2(self):
+        self.num1.icon = 'numeric-1-circle'
+        self.num1.icon_color = 'white'
+        self.progressbar1.value = 0
+        self.manager.get_screen('sign_up').slide.load_previous()
+
+    def previous3(self):
+
+        self.num2.icon = 'numeric-2-circle'
+        self.num2.icon_color = 'white'
+        self.progressbar2.value = 0
+        self.manager.get_screen('sign_up').slide.load_previous()
 
 
-    def check_inf(self, instance):
-        if self.password.text!=self.ppassword.text:
-            self.ppassword.background_color = [1, .33, .33]
-            self.ppassword.text=''
-            self.ppassword.hint_text = 'Пароли не совпадают'
+class EmailConfirmation(Screen):
+    def enter(self):
+        self.email_conf.font_size = Window.height / 28
+        self.text.font_size = Window.height / 58
+        self.send_code.font_size = Window.height / 45
+        self.return_to_sign_up.font_size = Window.height / 45
+
+    def on_enter(self, *args):
+        code = Client(operation='send_code',
+                      email=self.manager.get_screen('sign_up').ids.email.text)
+        code.start()
+        self.code = code.task()
+
+    def checking_code(self):
+        if self.conf_code.text == self.code:
+            salt = os.urandom(12).hex()
+            password = self.manager.get_screen('sign_up').ids.password.text.encode()
+            password = pbkdf2_hmac('sha256', password, salt.encode('utf-8'), 10000, )
+            user_inf = Client(operation='user_inf',
+                              email=self.manager.get_screen('sign_up').ids.email.text,
+                              first_name=self.manager.get_screen('sign_up').ids.frst_name.text,
+                              last_name=self.manager.get_screen('sign_up').ids.last_name.text,
+                              phone_number=self.manager.get_screen('sign_up').ids.number.text,
+                              password=password.hex(),
+                              salt=salt
+                              )
+            user_inf.start()
+            self.manager.current = 'sign_in'
+            self.manager.transition.direction = 'right'
         else:
-            self.ppassword.background_color = 'white'
-            self.user_information()
+            Snackbar(
+                text="  Неправильный код",
+                snackbar_animation_dir='Top',
+                bg_color='#CF5A5D',
+                shadow_color='#CF5A5D',
+                font_size=Window.height // 44,
+                snackbar_x=f"{Window.height // 44}dp",
+                snackbar_y=f"{Window.height // 1.1}dp",
+                size_hint_x=.9,
+                radius=[20, 20, 20, 20]
+            ).open()
 
 
-    def user_information(self):
-        user_inf = {'name': self.name_user.text, 'last_name': self.lstname.text, 'email': self.email.text, 'password':self.password.text}
-        print(user_inf)
-        set_screen_l('menu_window')
-
-
-
-
-
-class MenuWindow(Screen, object):
-
-    def __init__(self, city, **kwargs):
-        super(MenuWindow, self).__init__(**kwargs)
-
-        self.size = Window.size
-        self.weather_at_city(city)
+class MenuWindow(Screen):
 
     def weather_at_city(self, city):
-        a = Weather(city)
-        a = a.weather()
-        self.main = a['main']
-        self.city_ti = a['city_ti']
-        self.time_city_now = a['time_city_now']
-        self.back = a['back']
-        self.color = a['color']
-        self.sost = a['sost']
-        self.temp = a['temp']
-        self.icon = a['icon']
-        self.wind = a['wind']
-        self.humidity = a['humidity']
-        self.pressure = a['pressure']
-        self.forecast_city = a['forecast_city']
-        self.feels_like = a['feels_like']
-        self.lat = a['lat']
-        self.lon = a['lon']
-        fl = FloatLayout()
-        bl = BoxLayout(orientation="vertical", size_hint=(.35, .15), pos_hint={'x': .325, 'y': .825}, spacing=8)
-        if self.main == 'Rain':
-            sound = SoundLoader.load('Data/Sound//rain.mp3')
-            sound.play()
-        bl.add_widget(Label(
-            text=self.time_city_now,
-            font_size=self.height / 22,
+        city = Client(operation='weather', city=city)
+        city.start()
+        city = json.loads(city.task())
+        if city == 'None':
+            Snackbar(
+                text="  Информация отсутствует",
+                snackbar_animation_dir='Top',
+                bg_color='#CF5A5D',
+                shadow_color='#CF5A5D',
+                font_size=Window.height // 44,
+                snackbar_x=f"{Window.height // 44}dp",
+                snackbar_y=f"{Window.height // 1.1}dp",
+                size_hint_x=.9,
+                radius=[20, 20, 20, 20]
+            ).open()
+            self.city.text = self.city_ti
+        else:
+            self.main = city['main']
+            if self.main == 'Rain':
+                sound = SoundLoader.load('Data/Sound//rain.mp3')
+                sound.play()
+            self.city_ti = city['city_ti']
+            self.time_city_now = city['time_city_now']
+            self.back = city['back']
+            self.lat.text = str(city['lat'])
+            self.lon.text = str(city['lon'])
+            self.color = city['color_card']
+            self.sost_w = city['sost']
+            self.temp_w = city['temp']
+            self.icon = city['icon']
+            self.wind = city['wind']
+            self.humidity = city['humidity']
+            self.pressure = city['pressure']
+            self.forecast_city = city['forecast_city']
+            self.feels_like = city['feels_like']
+            self.img.source = self.back
+            self.map_btn.background_normal = city['map']
+            self.map_btn.background_down = city['map_press']
+            self.map_btn.size_hint = (.175, .175 * Window.width / Window.height)
+            self.time.text = self.time_city_now
+            self.time.font_size = Window.height / 22
+            self.city.text = self.city_ti
+            self.city.font_size = Window.height / 42
+            self.btn.font_size = Window.height / 50
+            self.sost.text = self.sost_w
+            self.sost.font_size = Window.height / 38
+            self.temp.text = self.temp_w
+            self.temp.font_size = Window.height / 10
+            self.prssr.text = self.pressure
+            self.prssr.font_size = Window.height / 53
+            self.hmdt.text = self.humidity
+            self.hmdt.font_size = Window.height / 53
+            self.wnd.text = self.wind
+            self.wnd.font_size = Window.height / 53
+            self.btn_clothes.font_size = Window.height / 53
+            self.menu.icon_size = f'{Window.height // 23}sp'
+            global back, color_card
+            back = 'Data/Image/loading '+ self.back[11:]
+            color_card = city['color_card']
 
-        ))
 
-        self.text_input = TextInput(multiline=False, text=self.city_ti, font_size=self.height / 45)
+            for i in range(10):
+                self.gl.add_widget(MDLabel(
+                    size_hint_x= None,
+                    halign =  'center',
+                    text = self.forecast_city[i][0],
+                    font_size = Window.height / 55
+                ))
+            for i in range(10):
+                self.gl.add_widget(Image(
+                    source = self.forecast_city[i][2]
+                ))
+            for i in range(10):
+                self.gl.add_widget(MDLabel(
+                    size_hint_x= None,
+                    halign =  'center',
+                    text = self.forecast_city[i][1],
+                    font_size = Window.height / 45
+                ))
+            self.manager.get_screen('library_selection').enter()
+            self.manager.get_screen('my_clothes_window').enter()
+            self.manager.get_screen('clothes_window').enter()
+            self.manager.get_screen('place').enter()
 
-        bl.add_widget(self.text_input)  # позиция
-        self.img = Image(source=self.back)
-        fl.add_widget(self.img)
-        bl.add_widget(Button(
-            text='Узнать погоду',
-            font_size=self.height / 42,  # font_size рaзмер шрифта
-            on_press=self.get_city,  # on_press нажата
-            # background_color цвет RGBA в %
-            background_normal="Data/Image//button.png",  # background_normal  делает цвет ярче
-        ))  # позиция
+    def get_city(self):
+        city = self.city.text
+        self.gl.clear_widgets()
+        self.manager.get_screen('place').ids.box.clear_widgets()
+        self.manager.get_screen('place').ids.fl.clear_widgets()
+        self.manager.get_screen('place').ids.search.background_normal ="Data/Image//search.png"
+        self.manager.get_screen('place').ids.search.background_down ="Data/Image//search.png"
+        self.manager.get_screen('place').ids.text1.text ='Выберете категорию'
 
-        fl.add_widget(bl)
-        bl2 = BoxLayout(orientation="vertical", size_hint=(.3, .1), pos_hint={'x': .35, 'y': .60}, spacing=30)
-        bl2.add_widget(Label(
-            text=self.sost,
-            font_size=self.height / 38
-        ))
-        bl2.add_widget(Label(
-            text=self.temp,
-            font_size=self.height / 10,
-        ))
-        fl.add_widget(bl2)
-        gl = GridLayout(cols=2, size_hint=(.8, .32), pos_hint={'x': .18, 'y': .147})
-        gl.add_widget(Label(
-            text=self.pressure,
-            font_size=self.height / 50
-        ))
-        gl.add_widget(Label(
-            text=self.humidity,
-            font_size=self.height / 50
-        ))
-        gl.add_widget(Label(
-            text=self.wind,
-            font_size=self.height / 50
-        ))
-        fl.add_widget(Button(
-            text='Рекомендуемая \nодежда',
-            size_hint=(.3, .05),
-            pos_hint={'x': .66, 'y': .2048},
-            on_press=lambda x:
-            set_screen_l('clothes_window'),
-            font_size=self.height / 50,
-            background_normal="Data/Image//button.png",
-            background_down="Data/Image//button.png"
-        ))
-        fl.add_widget(Button(
-            size_hint=(.175, .175 * Window.width / Window.height),
-            pos_hint={'x': .78, 'y': .9},
-            on_press=lambda x:
-            set_screen_l('map'),
-            background_normal=a['map'],
-            background_down=a['map_press']
-        ))
-        layout = GridLayout(cols=10, spacing=Window.width / 500, size_hint_x=None)
-        layout.bind(minimum_width=layout.setter('width'))
-        for i in range(10):
-            layout.add_widget(Label(
-                text=self.forecast_city[i][0], size_hint_x=None,
-                font_size=self.height / 55
-            ))
-        for i in range(10):
-            img = Image(source=self.forecast_city[i][2])
-            layout.add_widget(img)
-        for i in range(10):
-            layout.add_widget(Label(
-                text=self.forecast_city[i][1],
-                font_size=self.height / 45
-            ))
-
-        al = FloatLayout(size_hint=(1, .17))
-        sv = ScrollView(size_hint=(None, 1), size=(Window.width, Window.height))
-        sv.add_widget(layout)
-        al.add_widget(sv)
-        fl.add_widget(al)
-        fl.add_widget(gl)
-        self.add_widget(fl)
-
-    def get_city(self, instance):
-        city = self.text_input.text
         self.weather_at_city(city)
 
+        # print( sm.get_screen('menu_window').ids.btn.text)
 
-class ClothesWinwow(Screen):
-    def __init__(self, **kw):
-        super(ClothesWinwow, self).__init__(**kw)
-
-    def on_enter(self):
-        self.back = sm.get_screen('menu_window').back[:-4] + '1.png'
-        self.back2 = sm.get_screen('menu_window').back[:-4] + '2.png'
-        fl = FloatLayout()
-        img = Image(source=self.back)
-        fl.add_widget(img)
-        fl.add_widget(Label(
-            text='Выберете пол',
-            font_size=self.height / 20,
-            pos_hint={'x': .02, 'y': .4}
-        ))
-        bl = BoxLayout(size_hint=(1, .6), pos_hint={'x': 0, 'y': .15})
-        bl.add_widget(Button(
-            on_press=self.man,
-            background_normal='Data/Image/man.png',
-            background_down='Data/Image/man_press.png'
-        ))
-        bl.add_widget(Button(
-            on_press=self.woman,
-            background_normal='Data/Image/woman.png',
-            background_down='Data/Image/woman_press.png'
-        ))
-        fl.add_widget(bl)
-        self.add_widget(fl)
-
-    def man(self, instance):
-        self.way = 'Data/Image//man'
-        self.style()
-
-    def woman(self, instance):
-        self.way = 'Data/Image//woman'
-        self.style()
-
-    def style(self):
-        fl = FloatLayout()
-        img = Image(source=self.back2)
-        fl.add_widget(img)
-        fl.add_widget(Label(
-            text='Выберете стиль',
-            font_size=self.height / 20,
-            pos_hint={'x': .02, 'y': .4}
-        ))
-        bl = BoxLayout(orientation='vertical', size_hint=(.5, .5), pos_hint={'x': .25, 'y': .25})
-        bl.add_widget(Button(
-            text='classic',
-            on_press=self.classic,
-            background_normal="Data/Image//button.png",
-        ))
-        bl.add_widget(Button(
-            text='casual',
-            on_press=self.casual,
-            background_normal="Data/Image//button.png",
-        ))
-        bl.add_widget(Button(
-            text='sport',
-            on_press=self.sport,
-            background_normal="Data/Image//button.png",
-        ))
-        fl.add_widget(bl)
-        self.add_widget(fl)
-
-    def classic(self, instance):
-        self.way += '/classic//'
-        self.clothe_img()
-
-    def casual(self, instance):
-        self.way += '/casual//'
-        self.clothe_img()
-
-    def sport(self, instance):
-        self.way += '/sport//'
-        self.clothe_img()
-
-    def clothe_img(self):
-        self.way += sm.get_screen('menu_window').feels_like
-        fl = FloatLayout()
-        fl.add_widget(Button(
-            on_press=lambda x: set_screen_r('menu_window'),
-            background_normal=self.way + '//' + choice(os.listdir(self.way))
-        ))
-        self.add_widget(fl)
+        # self.weather_at_city(city)
 
 
-class Map(Screen):
+class LibrarySelection(Screen):
+    def enter(self):
+        self.back.source = self.manager.get_screen('menu_window').ids.img.source[:-4] + '1.png'
+        self.arrow1.icon_size = f'{Window.height // 18}sp'
+        self.text.font_size = Window.height / 22
 
-    def __init__(self, **kwargs):
-        super(Map, self).__init__(**kwargs)
 
-    def on_enter(self):
-        self.back = sm.get_screen('menu_window').back[:-4] + '1.png'
-        self.build = 'Data/Image//build.png'
-        self.geo = {'lat': sm.get_screen('menu_window').lat, 'lon': sm.get_screen('menu_window').lon}
-        fl = FloatLayout()
-        gl = GridLayout(cols=2, size_hint=(.8, .32), pos_hint={'x': .18, 'y': .32}, spacing=Window.height // 10)
-        img = Image(source=self.back)
-        fl.add_widget(img)
-        img = Image(source=self.build)
-        fl.add_widget(img)
-        fl.add_widget(Label(
-            text='Выберете категорию',
-            font_size=self.height / 25,
-            pos_hint={'x': .02, 'y': .4}
-        ))
-        gl.add_widget(Button(
-            text='Кинотеатр',
-            on_press=self.cinema,
-            background_normal="Data/Image//button.png",
-            font_size=self.height / 42
-        ))
-        gl.add_widget(Button(
-            text='Парк',
-            on_press=self.park,
-            background_normal="Data/Image//button.png",
-            font_size=self.height / 42
+class MyClothesWindow(Screen):
+    def enter(self):
+        self.back.source = self.manager.get_screen('menu_window').ids.img.source[:-4] + '1.png'
+        self.arrow1.icon_size = f'{Window.height // 18}sp'
+        self.camera.icon_size = f'{Window.height // 22}sp'
+        self.text.font_size = Window.height / 20
 
-        ))
-        gl.add_widget(Button(
-            text='Кафе',
-            on_press=self.cafe,
-            background_normal="Data/Image//button.png",
-            font_size=self.height / 42
 
-        ))
-        gl.add_widget(Button(
-            text='Бар',
-            on_press=self.bar,
-            background_normal="Data/Image//button.png",
-            font_size=self.height / 42
+class ClothesWindow(Screen):
+    path = 'Data/Image/'
 
-        ))
-        gl.add_widget(Button(
-            text='Ресторан',
-            on_press=self.restaurant,
-            background_normal="Data/Image//button.png",
-            font_size=self.height / 42
+    def enter(self):
+        self.back.source = self.manager.get_screen('menu_window').ids.img.source[:-4] + '1.png'
+        self.arrow1.icon_size = f'{Window.height // 18}sp'
+        self.text1.font_size = Window.height / 20
+        self.arrow2.icon_size = f'{Window.height // 18}sp'
+        self.text2.font_size = Window.height / 20
+        self.male.icon_size = f'{Window.height // 2}sp'
+        self.female.icon_size = f'{Window.height // 2}sp'
 
-        ))
-        gl.add_widget(Button(
-            text='Отель',
-            on_press=self.hotel,
-            background_normal="Data/Image//button.png",
-            font_size=self.height / 42
+    def next1(self, text):
+        self.manager.get_screen('clothes_window').slide.load_next(mode='next')
+        self.path += text
+        self.gender = text
 
-        ))
-        fl.add_widget(Button(
-            on_press=lambda x: set_screen_r('menu_window'),
-            background_normal="Data/Image//pointer.png",
-            background_down="Data/Image//pointer.png",
-            size_hint=(.18, .0783),
-            pos_hint={'x': .03, 'y': .92},
+    def next2(self, text):
+        self.manager.get_screen('clothes_window').slide.load_next(mode='next')
+        self.path += text + self.manager.get_screen('menu_window').feels_like
+        self.path += '//' + choice(os.listdir(self.path))
+        self.clothe.background_normal = self.path
 
-        ))
-        fl.add_widget(gl)
-        self.add_widget(fl)
+    def to_main_window(self):
+        self.manager.get_screen('clothes_window').slide.load_previous()
+        self.manager.transition.direction = 'right'
+        self.manager.current = 'menu_window'
+        self.path = 'Data/Image/' + self.gender
 
-    def cinema(self, instance):
-        geo_place = GeoLoc(self.geo, 'кинотеатр')
-        self.place = geo_place.location()
-        self.build_img = "Data/Image//cinema.png"
-        set_screen_l('place')
+    def back_to_gender(self):
+        self.manager.get_screen('clothes_window').slide.load_previous()
+        self.path = 'Data/Image/'
 
-    def park(self, instance):
-        geo_place = GeoLoc(self.geo, 'парк')
-        self.place = geo_place.location()
-        self.build_img = "Data/Image//park.png"
-        set_screen_l('place')
 
-    def cafe(self, instance):
-        geo_place = GeoLoc(self.geo, 'кафе')
-        self.place = geo_place.location()
-        self.build_img = "Data/Image//cafe.png"
-        set_screen_l('place')
+class CameraScreen(Screen):
+    def enter(self):
+        self.arrow1.icon_size = f'{Window.height // 18}sp'
+        self.take_photo.icon_size = f'{Window.height // 12}sp'
+        self.image_btn.icon_size = f'{Window.height // 22}sp'
 
-    def bar(self, instance):
-        geo_place = GeoLoc(self.geo, 'бар')
-        self.place = geo_place.location()
-        self.build_img = "Data/Image//bar.png"
-        set_screen_l('place')
-
-    def restaurant(self, instance):
-        geo_place = GeoLoc(self.geo, 'ресторан')
-        self.place = geo_place.location()
-        self.build_img = "Data/Image//restaurant.png"
-        set_screen_l('place')
-
-    def hotel(self, instance):
-        geo_place = GeoLoc(self.geo, 'отель')
-        self.place = geo_place.location()
-        self.build_img = "Data/Image//hotel.png"
-        set_screen_l('place')
+    def on_enter(self, *args):
+        self.camera.play = True
+    pass
 
 
 class Place(Screen):
+    def enter(self):
+        self.back.source = self.manager.get_screen('menu_window').ids.img.source[:-4] + '1.png'
+        self.arrow1.icon_size = f'{Window.height // 18}sp'
+        self.search.size_hint=  (.2, .2 * Window.width / Window.height)
+        self.text1.font_size = Window.height / 20
+        zoom = 15
 
-    def __init__(self, **kw):
-        super(Place, self).__init__(**kw)
-        self.numb = 0
+        self.brock.add_widget(FitImage(
+            source='Data/Image/Brock.png'
+        ))
 
-    def on_enter(self):
-        self.back = sm.get_screen('menu_window').back[:-4] + '1.png'
-        self.build_img = sm.get_screen('map').build_img
-        if self.numb == 5:
-            self.numb = 4
-        elif self.numb == -6:
-            self.numb = -5
-        fl = FloatLayout()
-        img = Image(source=self.back)
-        fl.add_widget(img)
-        img = Image(source=self.build_img, pos_hint={'x': .005, 'y': .42})
-        fl.add_widget(img)
-        place = sm.get_screen('map').place
-        bl = BoxLayout(orientation='horizontal', size_hint=(.9, .07), pos_hint={'x': .05, 'y': .25})
-        bl.add_widget(Button(
-            on_press=self.minus,
-            background_normal="Data/Image//pointer1.png"
 
-        ))
-        bl.add_widget(Button(
-            on_press=self.plus,
-            background_normal="Data/Image//pointer2.png"
-        ))
-        name = place["features"][self.numb]["properties"]["CompanyMetaData"]["name"].split()
-        address = place["features"][self.numb]["properties"]["CompanyMetaData"]["address"].split(', ')
-        del address[0]
-        address = '\n    '.join(address)
-        try:
-            hours = place["features"][self.numb]["properties"]["CompanyMetaData"]["Hours"]["text"].split('; ')
-            hours = '\n    '.join(hours)
-        except:
-            hours = 'информация отсутствует'
-        try:
-            self.url = place["features"][self.numb]["properties"]["CompanyMetaData"]["url"]
-        except:
-            self.url = ''
-        place_inf = f'Адрес:\n    {address}\nРасписание:\n    {hours}'
-        fl.add_widget(Label(
-            text=place_inf,
-            font_size=self.height / 50,
-        ))
-        fl.add_widget(bl)
-        bl = BoxLayout(orientation='vertical', size_hint=(.35, .15), pos_hint={'x': .325, 'y': .7})
-        for i in range(len(name)):
-            bl.add_widget(Label(
-                text=name[i],
-                font_size=self.height / 22
+    def on_enter(self, *args):
+        pass
+        # self.map.lat = int(sm.get_screen('menu_window').lat)
+        # self.map.lon = int(sm.get_screen('menu_window').lon)
+    def category(self):
+        category_menu = {
+            'Кинотеатры': ["Data/Image//cinema.png", 'filmstrip-box'],
+            "Парки":["Data/Image//park.png", 'tree'],
+            "Кафе":["Data/Image//cafe.png", 'coffee'],
+            "Бары":["Data/Image//bar.png", 'beer'],
+            "Рестораны": ["Data/Image//restaurant.png", 'silverware-variant'],
+            "Отели":["Data/Image//hotel.png", 'bed'],
+
+        }
+        category = MDListBottomSheet(
+            bg_color = color_card,
+            radius_from='top',
+
+            size_hint = (1, 1)
+
+        )
+        for item in category_menu.items():
+            category.add_item(
+                text= item[0],
+                callback= lambda x, y = item[0], z = item[1]: self.category_menu_press(y,z),
+                icon =  item[1][1],
+
+            )
+        category.open()
+    def category_menu_press(self, name, path):
+        self.fl.clear_widgets()
+        self.map = MapView(
+            size_hint=(.8, .5),
+            pos_hint={'center_x': .5, 'center_y': .4},
+            lat=self.manager.get_screen('menu_window').ids.lat.text,
+            lon=self.manager.get_screen('menu_window').ids.lon.text,
+            zoom=15,
+        )
+        self.brock.clear_widgets()
+        self.box.clear_widgets()
+        self.text1.text = name
+        self.search.background_normal = path[0]
+        self.search.background_down = path[0]
+        self.geo = [self.manager.get_screen('menu_window').ids.lat.text, self.manager.get_screen('menu_window').ids.lon.text]
+        places = GeoLoc(self.geo, name).location()
+        for i in range(len(places)):
+            self.map.add_widget(MapMarkerPopup(lat = places[i]['coordinates'][0], lon = places[i]['coordinates'][1]))
+            self.box.add_widget(MDExpansionPanel(
+                content = Content(places[i]['address'], places[i]['hours']).enter(),
+                panel_cls=MDExpansionPanelOneLine(text=places[i]['name']),
             ))
-        fl.add_widget(bl)
-        if self.url !='':
-            fl.add_widget(Button(
-                text = 'Перейти на сайт',
-                on_press = self.link,
-                font_size=self.height / 30,
-                background_normal="Data/Image//button.png",
-                background_down="Data/Image//button.png",
-                size_hint=(.2, .2),
-                pos_hint={'x': .4, 'y': .008},
-            ))
-        fl.add_widget(Button(
-            on_press=lambda x: set_screen_r('map'),
-            background_normal="Data/Image//pointer.png",
-            background_down="Data/Image//pointer.png",
-            size_hint=(.18, .0783),
-            pos_hint={'x': .03, 'y': .92},
 
+        self.fl.add_widget(self.map)
+
+    def segmented_control(self, widget, pos, *args):
+        animation = Animation(pos_hint = {'center_x': pos}, duration= 0.2)
+        animation.start(widget)
+
+
+class Map(Screen):
+    pass
+    # def enter(self):
+    #     # places = GeoLoc(geo, 'кинотеатр').location()
+    #     # for i in range (5):
+    #     #     name = places["features"][i]["properties"]["CompanyMetaData"]["name"]
+    #     #     address = places["features"][i]["properties"]["CompanyMetaData"]["address"].split(', ')
+    #     #     del address[0]
+    #     #     address = ', '.join(address)
+    #     #     try:
+    #     #         hours = places["features"][i]["properties"]["CompanyMetaData"]["Hours"]["text"].split('; ')
+    #     #         hours = '\n    '.join(hours)
+    #     #     except:
+    #     #         hours = 'информация отсутствует'
+    #     #     try:
+    #     #         self.url = places["features"][i]["properties"]["CompanyMetaData"]["url"]
+    #     #     except:
+    #     #         self.url = ''
+    #     #     print(name, address, hours, self.url)
+    #     pass
+
+
+class Content(object):
+    dialog1 = None
+    dialog2 = None
+    def __init__(self, address, schedule):
+        self.address = address
+        self.schedule = schedule
+    def enter(self):
+        bl = MDBoxLayout(orientation='vertical', adaptive_height=True)
+        item1 = TwoLineIconListItem(text='Адрес', secondary_text=self.address,
+                                    on_release=lambda x, y=self.address: self.on_release_1(y))
+        item1.add_widget(IconLeftWidget(
+            icon="map-marker-path"
         ))
-        self.add_widget(fl)
+        bl.add_widget(item1)
+        item2 = TwoLineIconListItem(text='Расписание', secondary_text=self.schedule,
+                                    on_release=lambda x, y=self.schedule: self.on_release_2(y))
+        item2.add_widget(IconLeftWidget(
+            icon="clock"
+        ))
+        bl.add_widget(item2)
+        return bl
+    def on_release_1(self, text):
+        if not self.dialog1:
+            self.dialog1 = MDDialog(
+                title = 'Адрес',
+                text=text,
 
-    def plus(self, instance):
-        self.numb += 1
-        self.on_enter()
-
-    def minus(self, instance):
-        self.numb -= 1
-        self.on_enter()
-
-    def link(self, instance):
-        webbrowser.open(self.url)
-
-
-class Weather(object):
-    def __init__(self, city):
-        self.city = city
-
-    def weather(self):
-        city = self.city
-        # получаем данные с сайта
-        key = '7bfb9951dd9ef554feb6223cf9c27328'
-        url = 'https://api.openweathermap.org/data/2.5/weather'
-        if type(city) is list:
-            param = {'APPID': key, 'lat': city[0], 'lon': city[1], 'units': 'metric', 'lang': 'ru'}
-            mas = requests.get(url, params=param)
-            weather = mas.json()
-            url1 = 'https://api.openweathermap.org/data/2.5/forecast'
-            param = {'APPID': key, 'lat': city[0], 'lon': city[1], 'cnt': 10, 'units': 'metric', 'lang': 'ru'}
-            mas = requests.get(url1, params=param)
-            forecast = mas.json()
-        else:
-            param = {'APPID': key, 'q': city, 'units': 'metric', 'lang': 'ru'}
-            mas = requests.get(url, params=param)
-            weather = mas.json()
-            url1 = 'https://api.openweathermap.org/data/2.5/forecast'
-            param = {'APPID': key, 'q': city, 'cnt': 10, 'units': 'metric', 'lang': 'ru'}
-            mas = requests.get(url1, params=param)
-            forecast = mas.json()
-        # погода в данный момент времени
-        city_ti = '{}, {}'.format(str(weather['name']), str(weather['sys']['country']))
-        time_zone = weather['timezone'] / 3600
-        time_city = timezone(timedelta(hours=time_zone))
-        time_city_now = str(datetime.now(time_city))[11:16]
-        sost = f'{str(weather["weather"][0]["description"]).capitalize()}'
-        temp = '{}°C'.format(round(weather['main']['temp']))
-        icon = 'Data/Image/heart.png'
-        wind = 'Скорость ветра \n{} м/с'.format(weather['wind']['speed'])
-        humidity = 'Влажность \n{}%'.format(str(weather['main']['humidity']))
-        pressure = 'Давление \n{} мм рт. ст.'.format(int(weather['main']['pressure'] * 0.750062))
-        clouds = weather['clouds']['all']
-        main = str(weather['weather'][0]['main'])
-        feels_like = round(weather['main']['feels_like'])
-        if feels_like <= -30:
-            feels_like_txt = 'very cold+'
-        elif -30 < feels_like <= -20:
-            feels_like_txt = 'very cold'
-        elif -20 < feels_like <= -10:
-            feels_like_txt = 'cold'
-        elif -10 < feels_like <= 0:
-            feels_like_txt = 'chilly'
-        elif 0 < feels_like <= 10:
-            feels_like_txt = 'medium'
-        elif 10 < feels_like <= 20:
-            feels_like_txt = 'warm'
-        elif 20 < feels_like <= 30:
-            feels_like_txt = 'heat'
-        elif 30 < feels_like:
-            feels_like_txt = 'very heat'
-        # цвет кнопок и задний фон
-        if 85 <= clouds <= 100:
-            color = [[.44, .45, .47, 1], [.38, .39, .42, 1]]
-            back = 'Data/Image/clouds.png'
-            map = 'Data/Image//map1.png'
-            map_press = 'Data/Image//map1_press.png'
-        elif 6 <= int(time_city_now[0:2]) <= 10:
-            color = [[.56, .61, .74, 1], [.55, .50, .48, 1]]
-            back = 'Data/Image/morning.png'
-            map = 'Data/Image//map1.png'
-            map_press = 'Data/Image//map1_press.png'
-        elif 0 <= int(time_city_now[0:2]) <= 5:
-            color = [[.27, .29, .57, 1], [.31, .30, .53, 1]]
-            back = 'Data/Image/night.png'
-            map = 'Data/Image//map1.png'
-            map_press = 'Data/Image//map1_press.png'
-        elif 17 <= int(time_city_now[0:2]) <= 23:
-            color = [[.27, .36, .49, 1], [.41, .39, .32, 1]]
-            back = 'Data/Image/midnight.png'
-            map = 'Data/Image//map.png'
-            map_press = 'Data/Image//map_press.png'
-        elif 11 <= int(time_city_now[0:2]) <= 16:
-            color = [[.28, .38, .75, 1], [.36, .46, .69, 1]]
-            back = 'Data/Image//afternoon.png'
-            map = 'Data/Image//map1.png'
-            map_press = 'Data/Image//map1_press.png'
-        # предсказание погоды 3ч
-        forecast_city = {}
-        for i in range(10):
-            forecast_time = str(datetime.strptime(forecast['list'][i]['dt_txt'], '%Y-%m-%d %H:%M:%S').replace(
-                tzinfo=timezone(timedelta(hours=0))).astimezone(tz=time_city))
-            forecast_time = '{}.{}\n{}'.format(forecast_time[8:10], forecast_time[5:7], forecast_time[11:16])
-            forecast_city[i] = [forecast_time, '{}°C'.format(round(forecast['list'][i]['main']['temp'])),
-                                'Data/Image/{}.png'.format(forecast['list'][i]['weather'][0]['icon'])]
-
-        self.a = {'city_ti': city_ti, 'time_city_now': time_city_now, 'sost': sost, 'icon': icon, 'temp': temp,
-                  'wind': wind,
-                  'humidity': humidity,
-                  'pressure': pressure, 'color': color, 'back': back, 'forecast_city': forecast_city, 'main': main,
-                   'feels_like': feels_like_txt, 'map': map, 'map_press': map_press,
-                  'lat': weather['coord']['lat'], 'lon': weather['coord']['lon']}
-
-        return self.a
+            )
+        self.dialog1.open()
+    def on_release_2(self, text):
+        if not self.dialog2:
+            self.dialog2 = MDDialog(
+                title = 'Расписание',
+                text=text,
 
 
-class GeoLoc(object):
-    def __init__(self, geoloc, place):
-        self.geoloc = geoloc
-        self.place = place
-
-    def location(self):
-        key = '2d3a7435-6798-428d-908b-31d615333bba'
-        url = 'https://search-maps.yandex.ru/v1/'
-        param = {'apikey': key, 'text': self.place, 'lang': 'ru_RU', 'll': f'{self.geoloc["lon"]},{self.geoloc["lat"]}',
-                 'spn': '0.552069,0.400552',
-                 'results': 5, }
-        mas = requests.get(url, params=param).json()
-        return mas
-
-
-def set_screen_r(name_screen):
-    sm.transition.direction = 'right'
-    sm.current = name_screen
-
-def set_screen_l(name_screen):
-    sm.transition.direction = 'left'
-    sm.current = name_screen
-
-
+            )
+        self.dialog2.open()
 # try:
 #     def print_locations(**kwargs):
 #         print('lat: {lat}, lon: {lon}'.format(**kwargs))
@@ -670,24 +616,34 @@ def set_screen_l(name_screen):
 #     gps.start()
 #     gps.stop()
 # except:
-geo = requests.get('https://ipinfo.io/json').json()
-geo = geo['loc'].split(',')
+
 Window.size = (416 // 1, 901 // 1)
 
 
+class MainApp(MDApp):
 
-class MainApp(App):
+    def on_start(self):
+        global geo
+        geo = requests.get('https://ipinfo.io/json').json()
+        geo = geo['loc'].split(',')
+        # Clock.schedule_once(lambda x: exec("root.current ='manager'"), 5)
 
     def build(self):
+        self.theme_cls.theme_style = "Dark"
+        self.theme_cls.primary_palette = "Orange"
         global sm
-        sm = ScreenManager()
-        sm.add_widget(LogIn(name='log_in'))
-        sm.add_widget(SignUp(name='sign_up'))
-        sm.add_widget(MenuWindow(name='menu_window', city=geo))
-        sm.add_widget(ClothesWinwow(name='clothes_window'))
-        sm.add_widget(Map(name='map'))
-        sm.add_widget(Place(name='place'))
-        return sm
+        sm_file = Builder.load_file('manager.kv')
+        # sm = ScreenManager()
+        # sm.add_widget(Loading(name='loading'))
+        # sm.add_widget(SignIn(name='sign_in'))
+        # sm.add_widget(SignUp(name='sign_up'))
+        # sm.add_widget(EmailConfirmation(name='email_confirmation'))
+        # sm.add_widget(MenuWindow(name='menu_window'))
+        # sm.add_widget(ClothesWindow(name='clothes_window'))
+        # sm.add_widget(Map(name='map'))
+        # sm.add_widget(Place(name='place'))
+
+        return sm_file
 
 
 if __name__ == '__main__':
