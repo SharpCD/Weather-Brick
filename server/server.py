@@ -108,7 +108,7 @@ class ClientThread(threading.Thread):
                 break
 
 class Server():
-    LOCALHOST = '192.168.1.7'
+    LOCALHOST = '93.85.88.9'
     PORT = 8080
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

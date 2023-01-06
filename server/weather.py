@@ -9,7 +9,7 @@ class Weather(object):
         try:
             city = self.city
             # получаем данные с сайта
-            key = ''
+            key = '7bfb9951dd9ef554feb6223cf9c27328'
             url = 'https://api.openweathermap.org/data/2.5/weather'
             if type(city) is list:
                 param = {'APPID': key, 'lat': city[0], 'lon': city[1], 'units': 'metric', 'lang': 'ru'}
@@ -101,4 +101,3 @@ class Weather(object):
             return self.a
         except:
             return 'None'
-
