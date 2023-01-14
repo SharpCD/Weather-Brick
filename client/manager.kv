@@ -1,6 +1,31 @@
-#:import XCamera kivy_garden.xcamera.XCamera
+<DrawerLabelItem@MDNavigationDrawerItem>
+    text_color: "white"
+    icon_color: "white"
+    selected_color: "white"
+    _no_ripple_effect: True
+    font_size: root.height / 10
 
-ScreenManager:
+
+<HeroItem>
+    size_hint_y: None
+    height: "321dp"
+    radius: 24
+
+    MDSmartTile:
+        id: tag_0
+        radius: 24
+        box_radius: 0, 0, 24, 24
+        box_color: 0, 0, 0, .5
+        source: root.source
+        size_hint: None, None
+        size: root.size
+        mipmap: True
+        on_release: root.on_release()
+
+
+
+
+MDScreenManager:
     Loading:
     SignIn:
     SignUp:
@@ -9,9 +34,13 @@ ScreenManager:
     LibrarySelection:
     MyClothesWindow:
     ClothesWindow:
+    ClothesImage:
+    ClothesImage2:
     CameraScreen:
-    Map:
     Place:
+    Clothes:
+    Clothes2:
+
 
 <Loading>
     name: 'loading'
@@ -22,16 +51,10 @@ ScreenManager:
 
 <SignIn>
     name: 'sign_in'
-    entry: entry
     email: email
-    next_btn:next_btn
     password:password
-    sign_up_btn:sign_up_btn
-    log_in_btn: log_in_btn
-    previous_btn:previous_btn
-    frgt_password: frgt_password
+    sign_up_btn:
     slide: slide
-    skip:skip
     back: back
     card: card
     MDFloatLayout:
@@ -58,7 +81,7 @@ ScreenManager:
                         icon_left_color_normal:'white'
                         multiline:False
                         hint_text:'Email'
-                        font_size:
+                        font_size:root.height / 50
                         color_mode: 'custom'
                         hint_text_color_normal: 'white'
                         pos_hint:{'center_x': .5, 'center_y': .68}
@@ -66,10 +89,10 @@ ScreenManager:
                         id: next_btn
                         size_hint: (.9, .14)
                         pos_hint:{'center_x': .5, 'center_y': .45}
-                        font_size:
+                        font_size: root.height / 40
                         text: 'ДАЛЬШЕ'
                         on_release:
-                            root.manager.get_screen('sign_in').next()
+                            root.next()
                         background_color: 1, 1, 1, 0
                         canvas.before:
                             Color:
@@ -82,7 +105,7 @@ ScreenManager:
                         id: sign_up_btn
                         text: "ЗАРЕГИСТРИРОВАТЬСЯ"
                         theme_text_color: "Custom"
-                        font_size:
+                        font_size:root.height / 40
                         size_hint: (.9, .14)
                         pos_hint:{ 'center_x': .5, 'center_y': .27}
                         text_color: "white"
@@ -95,12 +118,11 @@ ScreenManager:
                         halign: 'center'
                         text: "Пропустить"
                         size_hint_x:  .5
+                        font_size: root.height / 48
                         color: rgba(135, 135, 135, 255)
                         pos_hint:{'center_x': .5, 'center_y': .11}
                         on_release:
-                            root.manager.transition.direction = 'left'
-                            root.manager.current = 'menu_window'
-
+                            root.skip_btn()
                 MDFloatLayout:
                     pos_hint:{'center_x': .5, 'center_y': .5}
                     MDTextField:
@@ -110,7 +132,7 @@ ScreenManager:
                         size_hint: (.9, .21)
                         multiline:False
                         hint_text:'Пароль'
-                        font_size:
+                        font_size:root.height / 50
                         pos_hint:{'center_x': .5, 'center_y': .68}
                         hint_text_color_normal: 'white'
                         password: True
@@ -126,10 +148,10 @@ ScreenManager:
                         id: log_in_btn
                         size_hint: (.9, .14)
                         pos_hint:{'center_x': .5, 'center_y': .45}
-                        font_size:
+                        font_size:root.height / 40
                         text: 'ВОЙТИ'
                         on_release:
-                            root.manager.get_screen('sign_in').log_in_information()
+                            root.log_in_information()
                         background_color: 1, 1, 1, 0
                         canvas.before:
                             Color:
@@ -142,20 +164,20 @@ ScreenManager:
                         id: previous_btn
                         text: "ВЕРНУТЬСЯ"
                         theme_text_color: "Custom"
-                        font_size:
+                        font_size:root.height / 40
                         size_hint: (.9, .14)
                         pos_hint:{ 'center_x': .5, 'center_y': .27}
                         text_color: "white"
                         line_color: "white"
                         on_release:
-                            root.manager.get_screen('sign_in').previous()
+                            root.previous()
 
                     MDTextButton:
                         id: frgt_password
                         text: "Забыли пароль?"
                         halign: 'center'
                         size_hint_x:  .5
-                        font_size:
+                        font_size:root.height / 48
                         color: "orange"
                         pos_hint:{'center_x': .5, 'center_y': .12}
                         on_release:
@@ -164,7 +186,7 @@ ScreenManager:
         MDLabel:
             halign: 'center'
             id: entry
-            font_size:
+            font_size:root.height / 24
             text: 'Вход'
             pos_hint:{'center_x': .5, 'center_y': .65}
 <SignUp>
@@ -209,7 +231,7 @@ ScreenManager:
                         icon_left: "account"
                         multiline:False
                         hint_text:'Имя'
-                        font_size:
+                        font_size: root.height / 50
                         color_mode: 'custom'
                         pos_hint:{'center_x': .5, 'center_y': .82}
                         line_color_normal:'white'
@@ -227,7 +249,7 @@ ScreenManager:
                         size_hint: (.9, .21)
                         multiline:False
                         hint_text:'Фамилия'
-                        font_size:
+                        font_size: root.height / 50
                         pos_hint:{'center_x': .5, 'center_y': .65}
                         hint_text_color_normal: rgba(135, 135, 135, 255)
                         icon_left: "account"
@@ -244,10 +266,10 @@ ScreenManager:
                         id: next_btn1
                         size_hint: (.9, .14)
                         pos_hint:{'center_x': .5, 'center_y': .45}
-                        font_size:
+                        font_size: root.height / 45
                         text: 'ДАЛЬШЕ'
                         on_release:
-                            root.manager.get_screen('sign_up').next1()
+                            root.next1()
                         background_color: 1, 1, 1, 0
                         canvas.before:
                             Color:
@@ -260,13 +282,13 @@ ScreenManager:
                         id: sign_in_btn
                         text: "ВЕРНУТЬСЯ"
                         theme_text_color: "Custom"
-                        font_size:
+                        font_size:root.height / 45
                         size_hint: (.9, .14)
                         pos_hint:{ 'center_x': .5, 'center_y': .27}
                         text_color: rgba(48,154,239,255)
                         line_color: rgba(48,154,239,255)
                         on_release:
-                            root.manager.get_screen('sign_up').previous1()
+                            root.previous1()
                 MDFloatLayout:
                     pos_hint:{'center_x': .5, 'center_y': .34}
                     MDTextField:
@@ -311,10 +333,10 @@ ScreenManager:
                         id: next_btn2
                         size_hint: (.9, .14)
                         pos_hint:{'center_x': .5, 'center_y': .45}
-                        font_size:
+                        font_size:root.height / 45
                         text: 'ДАЛЬШЕ'
                         on_release:
-                            root.manager.get_screen('sign_up').next2()
+                            root.next2()
                         background_color: 1, 1, 1, 0
                         canvas.before:
                             Color:
@@ -327,13 +349,13 @@ ScreenManager:
                         id: previous_btn1
                         text: "ВЕРНУТЬСЯ"
                         theme_text_color: "Custom"
-                        font_size:
+                        font_size:root.height / 45
                         size_hint: (.9, .14)
                         pos_hint:{ 'center_x': .5, 'center_y': .27}
                         text_color: rgba(48,154,239,255)
                         line_color: rgba(48,154,239,255)
                         on_release:
-                            root.manager.get_screen('sign_up').previous2()
+                            root.previous2()
                 MDFloatLayout:
                     pos_hint:{'center_x': .5, 'center_y': .34}
                     MDTextField:
@@ -380,10 +402,10 @@ ScreenManager:
                         id: next_btn3
                         size_hint: (.9, .14)
                         pos_hint:{'center_x': .5, 'center_y': .45}
-                        font_size:
+                        font_size:root.height / 45
                         text: 'ДАЛЬШЕ'
                         on_release:
-                            root.manager.get_screen('sign_up').next3()
+                            root.next3()
                         background_color: 1, 1, 1, 0
                         canvas.before:
                             Color:
@@ -396,18 +418,18 @@ ScreenManager:
                         id: previous_btn2
                         text: "ВЕРНУТЬСЯ"
                         theme_text_color: "Custom"
-                        font_size:
+                        font_size:root.height / 45
                         size_hint: (.9, .14)
                         pos_hint:{ 'center_x': .5, 'center_y': .27}
                         text_color: rgba(48,154,239,255)
                         line_color: rgba(48,154,239,255)
                         on_release:
-                            root.manager.get_screen('sign_up').previous3()
+                            root.previous3()
         MDIconButton:
             id: num1
             icon: 'numeric-1-circle'
             pos_hint:{'center_x': .20, 'center_y': .63}
-            icon_size:
+            icon_size:root.height / 25
             theme_icon_color: "Custom"
             icon_color:
         MDIconButton:
@@ -416,13 +438,13 @@ ScreenManager:
             icon_color:
             icon: 'numeric-2-circle'
             pos_hint:{'center_x': .5, 'center_y': .63}
-            icon_size:
+            icon_size:root.height / 25
             icon_color:
         MDIconButton:
             id: num3
             icon: 'numeric-3-circle'
             pos_hint:{'center_x': .8, 'center_y': .63}
-            icon_size:
+            icon_size: root.height / 25
             theme_icon_color: "Custom"
             icon_color:
         MDProgressBar:
@@ -462,12 +484,12 @@ ScreenManager:
             MDLabel:
                 id: email_conf
                 halign: 'center'
-                font_size:
+                font_size:root.height / 28
                 text: 'Подтвердите Email'
                 pos_hint:{'center_x': .5, 'center_y': .86}
             MDLabel:
                 id: text
-                font_size:
+                font_size:root.height / 58
                 text: 'Мы выслали вам 4-х значный код на Email.\nВведите его в поле ниже'
                 pos_hint:{'center_x': .58, 'center_y': .7}
             MDTextField:
@@ -490,8 +512,8 @@ ScreenManager:
                 id: send_code
                 size_hint: (.9, .14)
                 pos_hint:{'center_x': .5, 'center_y': .3}
-                font_size:
-                text: 'ОТПРАВИТЬ КОД'
+                font_size:root.height / 45
+                text: 'ПОДТВЕРДИТЬ КОД'
                 on_release:
                     root.manager.get_screen('email_confirmation').checking_code()
                 background_color: 1, 1, 1, 0
@@ -506,7 +528,7 @@ ScreenManager:
                 id: return_to_sign_up
                 text: "ВЕРНУТЬСЯ"
                 theme_text_color: "Custom"
-                font_size:
+                font_size:root.height / 45
                 size_hint: (.9, .14)
                 pos_hint:{ 'center_x': .5, 'center_y': .12}
                 text_color: rgba(48,154,239,255)
@@ -521,21 +543,28 @@ ScreenManager:
 <MenuWindow>
     name: 'menu_window'
     btn: btn
-    img: img
+    back: back
     time: time
     city:city
     sost:sost
     temp:temp
     prssr: prssr
+    prssr_img:prssr_img
     hmdt: hmdt
+    hmdt_img: hmdt_img
     wnd: wnd
+    wnd_img: wnd_img
     btn_clothes:btn_clothes
+    clothes_img:clothes_img
     gl:gl
     map_btn: map_btn
     menu:menu
     lat:lat
     lon:lon
+    user: user
     nav_drawer:nav_drawer
+    login_logout:login_logout
+    email:email
     MDFloatLayout:
         MDLabel:
             id: lat
@@ -545,15 +574,24 @@ ScreenManager:
             text: ''
 
         FitImage:
-            id: img
+            id: back
             source: ''
         MDIconButton:
             id:menu
             icon:'menu'
-            icon_size:
+            icon_size:root.height / 23
             pos_hint: {"center_x": .09, "center_y": .95}
             on_release:
                 nav_drawer.set_state("open")
+        MDIconButton:
+            icon:'map-marker-circle'
+            icon_size:root.height / 23
+            opacity: .5
+            theme_icon_color: "Custom"
+            icon_color: rgba(0, 0, 0, 255)
+            pos_hint:{'x': .82, 'y': .832}
+            on_release:
+                root.weather_at_city(root.geo)
 
         MDFloatLayout:
             size_hint: (.6, .044)
@@ -564,7 +602,7 @@ ScreenManager:
                 RoundedRectangle:
                     pos: self.pos
                     size: self.size
-                    radius: [10, 10, 10, 10]
+                    radius: [root.height//100, root.height//100, root.height//100, root.height//100]
         MDFloatLayout:
             size_hint: (.6, .044)
             pos_hint:{'x': .2, 'y': .825}
@@ -575,7 +613,7 @@ ScreenManager:
                 RoundedRectangle:
                     pos: self.pos
                     size: self.size
-                    radius: [10, 10, 10, 10]
+                    radius: [root.height//100,root.height// 100, root.height//100, root.height//100]
         MDBoxLayout:
             orientation: 'vertical'
             size_hint: (.6, .15)
@@ -586,21 +624,21 @@ ScreenManager:
                 halign: 'center'
                 id: time
                 text: ''
-                font_size:
+                font_size:root.height / 22
                 font_name:
             TextInput:
                 id: city
                 halign: 'center'
                 text: ''
                 hint_text: 'Введите город'
-                font_size:
+                font_size:root.height / 42
                 multiline: False
                 padding:
                 background_color: 1, 1, 1, 0
             MDFlatButton:
                 id: btn
                 pos_hint: {"center_x": .5, "center_y": .5}
-                font_size:
+                font_size:root.height / 50
                 text: 'Узнать погоду'
                 on_release: root.manager.get_screen('menu_window').get_city()
                 text_color: 'white'
@@ -608,11 +646,12 @@ ScreenManager:
             id: map_btn
             background_normal: ''
             background_down: ''
-            size_hint:
+            size_hint:(.08* root.height / root.width, .08)
             pos_hint: {'center_x': .9, 'center_y': .95}
             on_release:
                 root.manager.current = 'place'
                 root.manager.transition.direction = 'left'
+
         MDBoxLayout:
             orientation:"vertical"
             size_hint: (1, .1)
@@ -622,12 +661,13 @@ ScreenManager:
                 halign: 'center'
                 id:sost
                 text:''
-                font_size:
+                font_size:root.height / 38
             MDLabel:
                 halign: 'center'
                 id:temp
                 text:''
-                font_size:
+                font_size:root.height / 10
+
         MDGridLayout:
             cols:2
             size_hint:(.9, .32)
@@ -635,25 +675,59 @@ ScreenManager:
             MDLabel:
                 id: prssr
                 text:''
-                font_size:
+                font_size:root.height / 53
             MDLabel:
                 id: hmdt
                 text:''
-                font_size:
+                font_size:root.height / 53
+
             MDLabel:
                 id: wnd
                 text:''
-                font_size:
+                font_size:root.height / 53
         Button:
             id: btn_clothes
             background_color: 1, 1, 1, 0
             text: 'Рекомендуемая\nодежда'
             size_hint:(.3, .05)
             pos_hint:{'x': .655, 'y': .2048}
-            font_size:
+            font_size:root.height / 53
             on_release:
                 root.manager.transition.direction = 'left'
                 root.manager.current ='library_selection'
+
+        FitImage:
+            id: prssr_img
+            size_hint:(.06* root.height / root.width, .06)
+            pos_hint:{'x': .067, 'y': .353}
+            source: ''
+
+        FitImage:
+            id: hmdt_img
+            source: ''
+            size_hint:(.063* root.height / root.width, .063)
+            pos_hint:{'x': .53, 'y': .353}
+        FitImage:
+            id: wnd_img
+            source: ''
+            size_hint:(.06* root.height / root.width, .06)
+            pos_hint:{'x': .067, 'y': .196}
+        FitImage:
+            id: clothes_img
+            source: ''
+            size_hint:(.06* root.height / root.width, .06)
+            pos_hint:{'x': .52, 'y': .196}
+        MDFloatLayout:
+            size_hint:(.95, .27)
+            pos_hint: {'center_x': .5, 'center_y': .31}
+            opacity: .12
+            canvas:
+                Color:
+                    rgb: rgba(0, 0, 0, 255)
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [root.height//60,root.height// 60, root.height//60, root.height//60]
         MDFloatLayout:
             size_hint:(1, .17)
 
@@ -671,8 +745,42 @@ ScreenManager:
         MDNavigationDrawer:
             id: nav_drawer
             radius: (0, 16, 16, 0)
-            scrim_color: 0, 0, 0, 0.8
+            scrim_color: 0, 0, 0, .2
             opacity: .12
+
+            MDNavigationDrawerMenu:
+                halign: 'center'
+                MDNavigationDrawerHeader:
+                    id: user
+                    title: "Здравствуйте,"
+                    title_color: "white"
+                    title_font_size: f'{root.height//22}sp'
+                    text_font_size: f'{root.height//35}sp'
+                    text: "вы еще не вошли в аккаунт"
+                    spacing: "8dp"
+                    padding: "12dp", 0, 0, "56dp"
+
+                DrawerLabelItem:
+                    id: email
+                    icon: "email"
+                    text: ""
+                    close_on_click: True
+                    text_color: "white"
+                    selected_color: "white"
+
+                MDNavigationDrawerDivider:
+
+                DrawerLabelItem:
+                    id: login_logout
+                    icon: "login"
+                    text: "Войти"
+                    close_on_click: True
+                    text_color: "white"
+                    selected_color: "white"
+                    on_release:
+                        root.login_logout_press()
+
+
 
 <LibrarySelection>
     name:'library_selection'
@@ -687,29 +795,30 @@ ScreenManager:
             id: arrow1
             icon: 'arrow-left'
             pos_hint:{ 'center_x': .1, 'center_y': .95}
-            icon_size:
+            icon_size:root.height // 18
             on_release:
                 root.manager.current = 'menu_window'
                 root.manager.transition.direction = 'right'
         MDLabel:
             halign: 'center'
             id: text
-            text:'Выберете библиотеку изображений'
-            font_size:
+            text:'Выберите библиотеку изображений'
+            font_size:Window.height // 22
             pos_hint:{ 'center_x': .5, 'center_y': .87}
 
         MDRoundFlatButton:
             text: "моя библиотека"
+            font_size: root.height//50
             theme_text_color: "Custom"
             text_color: "white"
             size_hint:(.8, .07)
             pos_hint:{ 'center_x': .5, 'center_y': .58}
             line_color: "white"
             on_release:
-                root.manager.current = 'my_clothes_window'
-                root.manager.transition.direction = 'left'
+                root.checking_for_authorization()
         MDRoundFlatButton:
             text: "библиотека приложения"
+            font_size: root.height//50
             theme_text_color: "Custom"
             size_hint:(.8, .07)
             pos_hint:{ 'center_x': .5, 'center_y': .42}
@@ -724,6 +833,7 @@ ScreenManager:
     text:text
     arrow1:arrow1
     camera:camera
+    slide:slide
     MDFloatLayout:
         FitImage
             id: back
@@ -736,7 +846,7 @@ ScreenManager:
                     id: arrow1
                     icon: 'arrow-left'
                     pos_hint:{ 'center_x': .1, 'center_y': .95}
-                    icon_size:
+                    icon_size:Window.height // 18
                     on_release:
                         root.manager.current = 'library_selection'
                         root.manager.transition.direction = 'right'
@@ -744,7 +854,7 @@ ScreenManager:
                     id: camera
                     icon: 'camera-plus'
                     pos_hint:{ 'center_x': .9, 'center_y': .95}
-                    icon_size:
+                    icon_size:Window.height // 22
                     on_release:
                         root.manager.get_screen('camera').enter()
                         root.manager.current = 'camera'
@@ -752,44 +862,41 @@ ScreenManager:
                 MDLabel:
                     halign: 'center'
                     id: text
-                    text:'Выберете cтиль'
-                    font_size:
+                    text:'Выберите cтиль'
+                    font_size:Window.height / 20
                     pos_hint:{ 'center_x': .5, 'center_y': .9}
 
                 MDRoundFlatButton:
                     text: "classic"
+                    font_size:Window.height / 46
                     theme_text_color: "Custom"
                     text_color: "white"
                     size_hint:(.8, .07)
                     pos_hint:{ 'center_x': .5, 'center_y': .65}
                     line_color: "white"
                     on_release:
-                        root.manager.get_screen('clothes_window').next2('classic//')
+                        root.next("classic")
                 MDRoundFlatButton:
                     text: "casual"
+                    font_size:Window.height / 46
                     theme_text_color: "Custom"
                     size_hint:(.8, .07)
                     pos_hint:{ 'center_x': .5, 'center_y': .5}
                     text_color: "white"
                     line_color: "white"
                     on_release:
-                        root.manager.get_screen('clothes_window').next2('casual//')
+                        root.next("casual")
                 MDRoundFlatButton:
                     text: "sport"
+                    font_size:Window.height / 46
                     theme_text_color: "Custom"
                     size_hint:(.8, .07)
                     pos_hint:{ 'center_x': .5, 'center_y': .35}
                     text_color: "white"
                     line_color: "white"
                     on_release:
-                        root.manager.get_screen('clothes_window').next2('sport//')
-            MDFloatLayout:
-                MDLabel:
-                    halign: 'center'
-                    id: text2
-                    text:'Для данных погодных условий в вашей библиотеке отсутствувет подходящая одежда'
-                    font_size:
-                    pos_hint:{ 'center_x': .5, 'center_y': .6}
+                        root.next("sport")
+
 <ClothesWindow>
     name: "clothes_window"
     back: back
@@ -800,7 +907,6 @@ ScreenManager:
     male: male
     female: female
     slide: slide
-    clothe:clothe
 
     MDFloatLayout:
         FitImage
@@ -814,28 +920,28 @@ ScreenManager:
                     id: arrow1
                     icon: 'arrow-left'
                     pos_hint:{ 'center_x': .1, 'center_y': .95}
-                    icon_size:
+                    icon_size:Window.height / 18
                     on_release:
                         root.manager.current = 'library_selection'
                         root.manager.transition.direction = 'right'
                 MDLabel:
                     halign: 'center'
                     id: text1
-                    text:'Выберете пол'
-                    font_size:
+                    text:'Выберите пол'
+                    font_size:Window.height / 20
                     pos_hint:{ 'center_x': .5, 'center_y': .9}
                 MDIconButton:
                     id: male
                     icon: 'human-male'
                     pos_hint:{ 'center_x': .25, 'center_y': .5}
-                    icon_size: '90sp'
+                    icon_size: Window.height / 3
                     on_release:
                         root.manager.get_screen('clothes_window').next1('man/')
                 MDIconButton:
                     id: female
                     icon: 'human-female'
                     pos_hint:{ 'center_x': .75, 'center_y': .5}
-                    icon_size: '90sp'
+                    icon_size: Window.height / 3
                     on_release:
                         root.manager.get_screen('clothes_window').next1('woman/')
             MDFloatLayout:
@@ -843,18 +949,19 @@ ScreenManager:
                     id: arrow2
                     icon: 'arrow-left'
                     pos_hint:{ 'center_x': .1, 'center_y': .95}
-                    icon_size:
+                    icon_size:Window.height / 18
                     on_release:
                         root.manager.get_screen('clothes_window').back_to_gender()
                 MDLabel:
                     halign: 'center'
                     id: text2
-                    text:'Выберете cтиль'
-                    font_size:
+                    text:'Выберите cтиль'
+                    font_size: Window.height / 20
                     pos_hint:{ 'center_x': .5, 'center_y': .9}
 
                 MDRoundFlatButton:
                     text: "classic"
+                    font_size:Window.height / 46
                     theme_text_color: "Custom"
                     text_color: "white"
                     size_hint:(.8, .07)
@@ -864,6 +971,7 @@ ScreenManager:
                         root.manager.get_screen('clothes_window').next2('classic//')
                 MDRoundFlatButton:
                     text: "casual"
+                    font_size:Window.height / 46
                     theme_text_color: "Custom"
                     size_hint:(.8, .07)
                     pos_hint:{ 'center_x': .5, 'center_y': .5}
@@ -873,6 +981,7 @@ ScreenManager:
                         root.manager.get_screen('clothes_window').next2('casual//')
                 MDRoundFlatButton:
                     text: "sport"
+                    font_size:Window.height / 46
                     theme_text_color: "Custom"
                     size_hint:(.8, .07)
                     pos_hint:{ 'center_x': .5, 'center_y': .35}
@@ -880,12 +989,6 @@ ScreenManager:
                     line_color: "white"
                     on_release:
                         root.manager.get_screen('clothes_window').next2('sport//')
-            MDFloatLayout:
-                Button:
-                    id: clothe
-                    background_normal: ''
-                    on_release:
-                        root.manager.get_screen('clothes_window').to_main_window()
 
 <CameraScreen>
     name: 'camera'
@@ -893,32 +996,40 @@ ScreenManager:
     arrow1:arrow1
     image_btn:image_btn
     take_photo:take_photo
-    Carousel:
-        id: slide
-        FloatLayout:
-            Camera:
-                id: camera
-                play: False
-            MDIconButton:
-                id: arrow1
-                icon: 'arrow-left'
-                pos_hint:{ 'center_x': .1, 'center_y': .95}
-                icon_size:
-                on_release:
-                    root.manager.current = 'my_clothes_window'
-                    root.manager.transition.direction = 'right'
-            MDIconButton:
-                id: take_photo
-                icon: 'checkbox-blank-circle-outline'
-                pos_hint:{ 'center_x': .5, 'center_y': .1}
-                icon_size:
-                on_release:
-            MDIconButton:
-                id: image_btn
-                icon: 'image'
-                pos_hint:{ 'center_x': .8, 'center_y': .1}
-                icon_size:
-                on_release:
+    drop_down:drop_down
+
+
+    FloatLayout:
+        Camera:
+            id: camera
+            play: False
+
+        MDIconButton:
+            id: arrow1
+            icon: 'arrow-left'
+            pos_hint:{ 'center_x': .1, 'center_y': .95}
+            icon_size:root.height // 18
+            on_release:
+                root.manager.current = 'my_clothes_window'
+                root.manager.transition.direction = 'right'
+        MDIconButton:
+            id: take_photo
+            icon: 'checkbox-blank-circle-outline'
+            pos_hint:{ 'center_x': .5, 'center_y': .1}
+            icon_size:root.height // 12
+            on_release:root.take_photo_function()
+        MDIconButton:
+            id: image_btn
+            icon: 'image'
+            pos_hint:{ 'center_x': .8, 'center_y': .1}
+            icon_size:root.height // 22
+            on_release:
+        MDDropDownItem:
+            id: drop_down
+            pos_hint: {'center_x': .5, 'center_y': .95}
+            text: 'Выберите стиль'
+            on_release: root.drp_down()
+
 
 <Place>
     name: 'place'
@@ -935,6 +1046,7 @@ ScreenManager:
     MDFloatLayout:
 
 
+
         FitImage:
             id: back
             source: ''
@@ -943,9 +1055,9 @@ ScreenManager:
         MDLabel:
             halign: 'center'
             id: text1
-            text: 'Выберете категорию'
+            text: 'Выберите категорию'
             pos_hint:{ 'center_x': .5, 'center_y': .9}
-            font_size:
+            font_size:root.height / 20
 
         Carousel:
             id: slide
@@ -967,15 +1079,17 @@ ScreenManager:
                         orientation: 'vertical'
             MDFloatLayout
                 id:fl
+
+
         Button:
             id: search
             halign: 'center'
             background_normal: "Data/Image//search.png"
             background_down: "Data/Image//search.png"
             pos_hint:{ 'center_x': .5, 'center_y': .8}
-            size_hint:
+            size_hint:(.2, .2 * root.width / root.height)
             on_release:
-                root.manager.get_screen('place').category()
+                root.category()
         MDFloatLayout:
             md_bg_color: 'white'
             pos_hint:{'center_x': .5, 'center_y': .72}
@@ -1001,19 +1115,21 @@ ScreenManager:
                 text: "Список"
                 text_color: "white"
                 size_hint_x: .5
+                font_size: root.height//50
                 line_color: 1, 1, 1, 0
                 on_release:
-                    root.manager.get_screen('place').segmented_control(switching, 0.325)
-                    root.manager.get_screen('place').slide.load_previous()
+                    root.segmented_control(switching, 0.325)
+                    root.slide.load_previous()
 
             MDRoundFlatButton:
                 text: "Карта"
+                font_size: root.height//50
                 text_color: "white"
                 size_hint_x: .5
                 line_color: 1, 1, 1, 0
                 on_release:
-                    root.manager.get_screen('place').segmented_control(switching, 0.675)
-                    root.manager.get_screen('place').slide.load_next(mode='next')
+                    root.segmented_control(switching, 0.675)
+                    root.slide.load_next(mode='next')
 
 
 
@@ -1021,17 +1137,120 @@ ScreenManager:
             id: arrow1
             icon: 'arrow-left'
             pos_hint:{ 'center_x': .1, 'center_y': .95}
-            icon_size:
+            icon_size: root.height // 18
             on_release:
-
                 root.manager.current = 'menu_window'
                 root.manager.transition.direction = 'right'
 
 
+<Clothes>
+    name: 'clothes'
+    box:box
+    back: back
+    bar:bar
+    blank:blank
+    FitImage:
+        id: back
+        source: ''
+
+    MDLabel:
+        id: blank
+        font_size:root.height / 30
+        text: ''
+        halign:'center'
+
+    ScrollView:
+        MDGridLayout:
+            id: box
+            pos_hint:{ 'center_x': .5, 'center_y': .2}
+            cols: 2
+            spacing: "12dp"
+            padding: "12dp"
+            adaptive_height: True
+
+    MDBottomAppBar:
+        MDTopAppBar:
+            id: bar
+            md_bg_bottom_color: 'white'
+            left_action_items: [["arrow-left", lambda x: root.current()]]
+            theme_icon_color: "Custom"
+            icon: "home"
+            on_action_button:
+                root.manager.current = 'menu_window'
+                root.manager.transition.direction = 'right'
+                root.box.clear_widgets()
+                root.blank.text = ''
+            title: "Title"
+            icon_color: self.md_bg_bottom_color
+            type: "bottom"
+
+<Clothes2>
+    name: 'clothes2'
+    box:box
+    back: back
+    bar:bar
+    blank:blank
+    FitImage:
+        id: back
+        source: ''
+
+    MDLabel:
+        id: blank
+        font_size:root.height / 30
+        text: ''
+        halign:'center'
+
+    ScrollView:
+        MDGridLayout:
+            id: box
+            pos_hint:{ 'center_x': .5, 'center_y': .2}
+            cols: 2
+            spacing: "12dp"
+            padding: "12dp"
+            adaptive_height: True
+
+    MDBottomAppBar:
+        MDTopAppBar:
+            id: bar
+            md_bg_bottom_color: 0, 1, 0, 1
+            left_action_items: [["arrow-left", lambda x: root.current()]]
+            icon: "home"
+            on_action_button:
+                root.manager.get_screen('clothes_window').to_main_window()
+                root.box.clear_widgets()
+                root.blank.text = ''
+            title: "Title"
+            icon_color: self.md_bg_bottom_color
+            type: "bottom"
+<ClothesImage>
+    name: 'clothes_image'
+    back: back
+    FitImage:
+        id: back
+        source: ''
+    MDIconButton:
+        icon: 'arrow-left'
+        pos_hint:{ 'center_x': .1, 'center_y': .95}
+        icon_size: root.height // 18
+        on_release:
+            root.manager.current = 'clothes'
+            root.manager.transition.direction = 'right'
+
+<ClothesImage2>
+    name: 'clothes_image2'
+    back: back
+    FitImage:
+        id: back
+        source: ''
+    MDIconButton:
+        icon: 'arrow-left'
+        pos_hint:{ 'center_x': .1, 'center_y': .95}
+        icon_size: root.height // 18
+        on_release:
+            root.manager.current = 'clothes2'
+            root.manager.transition.direction = 'right'
 
 
-<Map>
-    name: 'map'
 
 
 
