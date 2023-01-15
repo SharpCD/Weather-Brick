@@ -330,10 +330,6 @@ class EmailConfirmation(MDScreen):
 class MenuWindow(MDScreen):
 
 
-    def update(self, *args):
-        self.weather_at_city([self.lat.text, self.lon.text])
-        # Clock.schedule_interval(self.weather_at_city([self.lat.text, self.lon.text]),20)
-
     def weather_at_city(self, city):
         city = Client(operation='weather', city=city)
         city.start()
@@ -815,9 +811,6 @@ class Content(object):
 
 
 
-Window.size = (416 // 1, 901 // 1)
-
-#
 class MainApp(MDApp):
 
     def on_start(self):
