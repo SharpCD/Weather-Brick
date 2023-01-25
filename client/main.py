@@ -1,5 +1,9 @@
+import cv2
+from kivy.core.image import Texture
 from kivy.graphics import Rectangle, Color, Line, Bezier, Ellipse, Triangle
+from kivy.uix.screenmanager import NoTransition
 from kivymd.app import MDApp
+from kivymd.uix.behaviors import FakeRectangularElevationBehavior
 from kivymd.uix.button import MDFillRoundFlatButton
 from kivymd.uix.screen import MDScreen
 from kivy.clock import Clock
@@ -28,15 +32,20 @@ from kivymd.uix.list.list import IconLeftWidget, OneLineIconListItem
 from kivy.animation import Animation
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.hero import MDHeroFrom
+from kivy.utils import platform
 from time import strftime
 regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
 password_re = "^.*(?=.{8,})(?=.*\d)(?=.*[a-z]).*$"
+gender_fldr = ['man', 'woman']
+style_fldr = ['casual', 'classic', 'sport']
+feels_like_fldr = ['chilly', 'cold', 'heat', 'medium', 'very cold', 'very cold+', 'very heat', 'warm']
 
 class Loading(MDScreen):
     def on_enter(self, *args):
         Clock.schedule_once(self.login, 4)
 
     def login(self, *args):
+        self.manager.transition = NoTransition()
         self.manager.get_screen('menu_window').weather_at_city(geo)
         self.manager.get_screen('sign_in').enter()
         try:
@@ -60,9 +69,7 @@ class SignIn(MDScreen):
         self.manager.get_screen('sign_up').enter()
 
     def next(self):
-        self.salt = Client(operation='get_salt', email=self.email.text)
-        self.salt.start()
-        self.salt = self.salt.task()
+        self.salt = Client(operation='get_salt', email=self.email.text).task2()
         if self.salt == 'None':
             Snackbar(
                 text="  Введите корректный Email",
@@ -84,9 +91,8 @@ class SignIn(MDScreen):
         log_in = Client(operation='log_in',
                         email=self.email.text,
                         password=password.hex()
-                        )
-        log_in.start()
-        log_in = json.loads(log_in.task())
+                        ).task2()
+        log_in = json.loads(log_in)
         if log_in == None:
             Snackbar(
                 text="  Неправильный пароль",
@@ -106,11 +112,9 @@ class SignIn(MDScreen):
             with open('registration.bin', 'wb') as file:
                 file.write('yes'.encode())
             self.manager.get_screen('sign_in').slide.load_previous()
-            WorkingWithImages().add_images(self.email.text)
             self.email.text = ''
             self.password.text = ''
             self.manager.current = 'menu_window'
-            self.manager.transition.direction = 'left'
 
     def previous(self):
         self.manager.get_screen('sign_in').slide.load_previous()
@@ -118,7 +122,6 @@ class SignIn(MDScreen):
     def skip_btn(self):
         with open('registration.bin','wb') as file:
             file.write('skip'.encode())
-        self.manager.transition.direction = 'left'
         self.manager.current = 'menu_window'
 
 
@@ -160,10 +163,8 @@ class SignUp(MDScreen):
 
     def next2(self):
         if len(self.email.text) != 0 and len(self.number.text) != 0 and re.fullmatch(regex, self.email.text):
-            requests_email = Client(operation='email_in_db', email=self.email.text)
-            requests_email.start()
-            self.task = requests_email.task()
-            if self.task == 'None':
+            requests_email = Client(operation='email_in_db', email=self.email.text).task2()
+            if requests_email == 'None':
                 self.num2.icon = 'checkbox-marked-circle'
                 self.num2.icon_color = '#309AEB'
                 self.progressbar2.value = 100
@@ -237,7 +238,6 @@ class SignUp(MDScreen):
             self.num3.icon_color = '#309AEB'
             self.manager.get_screen('sign_up').slide.load_next(mode='next')
             self.manager.get_screen('email_confirmation').enter()
-            self.manager.transition.direction = 'left'
             self.manager.current = 'email_confirmation'
         elif len(self.password.text) == 0:
             Snackbar(
@@ -270,7 +270,6 @@ class SignUp(MDScreen):
             self.repeat_password.text = ''
 
     def previous1(self):
-        self.manager.transition.direction = 'right'
         self.manager.current = 'sign_in'
 
     def previous2(self):
@@ -293,9 +292,8 @@ class EmailConfirmation(MDScreen):
 
     def on_enter(self, *args):
         code = Client(operation='send_code',
-                      email=self.manager.get_screen('sign_up').ids.email.text)
-        code.start()
-        self.code = json.loads(code.task())
+                      email=self.manager.get_screen('sign_up').ids.email.text).task2()
+        self.code = json.loads(code)
 
     def checking_code(self):
         if self.conf_code.text == self.code['code']:
@@ -309,10 +307,8 @@ class EmailConfirmation(MDScreen):
                               phone_number=self.manager.get_screen('sign_up').ids.number.text,
                               password=password.hex(),
                               salt=salt
-                              )
-            user_inf.start()
+                              ).task2()
             self.manager.current = 'sign_in'
-            self.manager.transition.direction = 'right'
         else:
             Snackbar(
                 text="  Неправильный код",
@@ -331,9 +327,10 @@ class MenuWindow(MDScreen):
 
 
     def weather_at_city(self, city):
-        city = Client(operation='weather', city=city)
-        city.start()
-        city = json.loads(city.task())
+        city = Client(operation='weather', city=city).task2()
+        # city.start()
+        # city = json.loads(city.task())
+        city = json.loads(city)
         self.main = city['main']
         if self.main == 'Rain':
             sound = SoundLoader.load('Data/Sound//rain.mp3')
@@ -353,8 +350,7 @@ class MenuWindow(MDScreen):
         self.pressure = city['pressure']
         self.forecast_city = city['forecast_city']
         self.feels_like = city['feels_like']
-        self.map_btn.background_normal = f'Data/Image/{dir}/map.png'
-        self.map_btn.background_down = f'Data/Image/{dir}/map_press.png'
+        self.feels_like_temp.text = city['feels_like_temp']
         self.time.text = self.time_city_now
         self.city.text = self.city_ti
         self.sost.text = self.sost_w
@@ -365,7 +361,7 @@ class MenuWindow(MDScreen):
         self.hmdt_img.source = f'Data/Image/{dir}/humidity.png'
         self.wnd.text = self.wind
         self.wnd_img.source = f'Data/Image/{dir}/wind.png'
-        self.clothes_img.source = f'Data/Image/{dir}/clothes.png'
+        self.temperature_img.source = f'Data/Image/{dir}/temperature.png'
         global back, color_card
         back = f'Data/Image/{dir}/background.png'
         self.back.source = back
@@ -408,12 +404,17 @@ class MenuWindow(MDScreen):
             self.login_logout.icon = 'logout'
             self.email.text = user_inf['email']
             self.email.icon = 'email'
+            self.image_synchronization.text = 'Синхронизация'
+            self.image_synchronization.icon = 'folder-image'
         else:
             self.user.text =   'вы еще не вошли в аккаунт'
             self.login_logout.text = 'Войти'
             self.login_logout.icon = 'login'
             self.email.text  = ''
             self.email.icon = ''
+            self.image_synchronization.text =''
+            self.image_synchronization.icon = ''
+
 
 
     def login_logout_press(self):
@@ -424,13 +425,19 @@ class MenuWindow(MDScreen):
             with open('registration.bin', 'wb') as file:
                 file.write('skip'.encode())
             WorkingWithImages().remove_iamges()
-            self.manager.transition.direction = 'right'
             self.manager.current = 'sign_in'
             file1 = open('user information.bin', 'wb')
             file1.close()
         else:
-            self.manager.transition.direction = 'right'
             self.manager.current = 'sign_in'
+
+    def image_synchronization_press(self):
+        if self.image_synchronization.text!='':
+            fl = MDFloatLayout(md_bg_color = 'black')
+            fl.add_widget(MDFillRoundFlatButton())
+            self.add_widget(fl)
+            WorkingWithImages().add_images(self.email.text)
+            self.remove_widget(fl)
 
     def get_city(self):
         city = self.city.text
@@ -439,6 +446,8 @@ class MenuWindow(MDScreen):
         self.manager.get_screen('place').ids.search.background_normal ="Data/Image//search.png"
         self.manager.get_screen('place').ids.search.background_down ="Data/Image//search.png"
         self.manager.get_screen('place').ids.text1.text ='Выберете категорию'
+        self.manager.get_screen('my_clothes_window').ids.box.clear_widgets()
+        self.manager.get_screen('clothes_window').ids.box.clear_widgets()
         try:
             self.weather_at_city(city)
         except:
@@ -469,7 +478,6 @@ class LibrarySelection(MDScreen):
             inf = file.read().decode()
         if inf == 'yes':
             self.manager.current = 'my_clothes_window'
-            self.manager.transition.direction = 'left'
         else:
             Snackbar(
                 text="  Войдите в аккаунт",
@@ -485,25 +493,80 @@ class LibrarySelection(MDScreen):
 
 
 class MyClothesWindow(MDScreen):
+
     def enter(self):
         self.back.source = back
-    def next(self, text):
+        self.add_images()
+
+    def drp_down(self):
+        menu_items = [
+            {
+                "text": "classic",
+                "viewclass": "OneLineListItem",
+                "on_release": lambda x="classic": self.menu_callback(x),
+            },
+            {
+                "text": "casual",
+                "viewclass": "OneLineListItem",
+                "on_release": lambda x="casual": self.menu_callback(x),
+            },
+            {
+                "text": "sport",
+                "viewclass": "OneLineListItem",
+                "on_release": lambda x="sport": self.menu_callback(x),
+            }
+        ]
+        self.menu = MDDropdownMenu(
+            caller=self.ids.drop_down,
+            items=menu_items,
+            width_mult=3,
+            max_height = self.height//6
+
+
+        )
+        self.menu.open()
+
+    def menu_callback(self, style):
+        self.drop_down.text = style
+        self.menu.dismiss()
+        self.box.clear_widgets()
+        self.add_images()
+
+    def add_images(self):
+        style =  self.drop_down.text
         feels_like = self.manager.get_screen('menu_window').feels_like
-        images_path  = f"Data/Image/my library/{text}/{feels_like}"
-        images_list = os.listdir(images_path)
-        if len(images_list)!=0:
-            for i in range(len(images_list)):
-                hero_item = HeroItem(
-                    text=f"Item {i + 1}", tag=f"tag_{i}", manager=self.manager, source=f"{images_path}/{images_list[i]}",
-                    screen = 'clothes_image')
-                if not i % 2:
-                    hero_item.md_bg_color = "lightgrey"
-                self.manager.get_screen('clothes').box.add_widget(hero_item)
+        self.blank.text = ''
+        if style == 'Стиль':
+            images_path= []
+            for style in style_fldr:
+                images = os.listdir(f"Data/Image/my library/{style}/{feels_like}")
+                for image in images:
+                    images_path += [f"Data/Image/my library/{style}/{feels_like}/{image}"]
+
+            if len(images_path) != 0:
+                for i in range(len(images_path)):
+                    hero_item = HeroItem(
+                        text=f"Item {i + 1}", tag=f"tag_{i}", manager=self.manager,
+                        source= images_path[i],
+                        screen='clothes_image')
+                    if not i % 2:
+                        hero_item.md_bg_color = "lightgrey"
+                    self.box.add_widget(hero_item)
+            else:
+                self.blank.text = 'В вашей библиотеке отсутствуют изображения одежды, подхожящие для данных погодных условий.'
         else:
-            self.manager.get_screen('clothes').blank.text = 'В вашей библиотеке отсутствуют изображения одежды, подхожящие для данных погодных условий.'
-        self.manager.get_screen('clothes').enter(text)
-        self.manager.transition.direction = 'left'
-        self.manager.current = "clothes"
+            images_path = f"Data/Image/my library/{style}/{feels_like}"
+            images_list = os.listdir(images_path)
+            if len(images_list)!=0:
+                for i in range(len(images_list)):
+                    hero_item = HeroItem(
+                        text=f"Item {i + 1}", tag=f"tag_{i}", manager=self.manager, source=f"{images_path}/{images_list[i]}",
+                        screen = 'clothes_image')
+                    if not i % 2:
+                        hero_item.md_bg_color = "lightgrey"
+                    self.box.add_widget(hero_item)
+            else:
+                self.blank.text = 'В вашей библиотеке отсутствуют изображения одежды, подхожящие для данных погодных условий.'
 
 
 class Clothes(MDScreen):
@@ -514,7 +577,6 @@ class Clothes(MDScreen):
 
     def current(self):
         self.manager.current = 'my_clothes_window'
-        self.manager.transition.direction = 'right'
         self.blank.text = ''
         self.box.clear_widgets()
 
@@ -525,41 +587,84 @@ class ClothesImage(MDScreen):
 
 
 class ClothesWindow(MDScreen):
-    path = 'Data/Image/'
-
     def enter(self):
         self.back.source = back
+        self.add_images()
 
-    def next1(self, text):
-        self.manager.get_screen('clothes_window').slide.load_next(mode='next')
-        self.path += text
-        self.gender = text
+    def drp_down(self):
+        menu_items = [
+            {
+                "text": "classic",
+                "viewclass": "OneLineListItem",
+                "on_release": lambda x="classic": self.menu_callback(x),
+            },
+            {
+                "text": "casual",
+                "viewclass": "OneLineListItem",
+                "on_release": lambda x="casual": self.menu_callback(x),
+            },
+            {
+                "text": "sport",
+                "viewclass": "OneLineListItem",
+                "on_release": lambda x="sport": self.menu_callback(x),
+            }
+        ]
+        self.menu = MDDropdownMenu(
+            caller=self.ids.drop_down,
+            items=menu_items,
+            width_mult=3,
+            max_height = self.height//6
 
-    def next2(self, text):
-        self.manager.get_screen('clothes_window').slide.load_next(mode='next')
-        self.path += text + self.manager.get_screen('menu_window').feels_like
-        images_list = os.listdir(self.path)
-        for i in range(len(images_list)):
-            hero_item = HeroItem(
-                text=f"Item {i + 1}", tag=f"tag_{i}", manager=self.manager, source=f"{self.path}/{images_list[i]}", screen = 'clothes_image2'
-            )
-            if not i % 2:
-                hero_item.md_bg_color = "lightgrey"
-            self.manager.get_screen('clothes2').box.add_widget(hero_item)
-        self.manager.get_screen('clothes2').enter(text[:-2])
-        self.manager.current = 'clothes2'
-        self.manager.transition.direction = 'left'
-    def current(self):
-        self.path = 'Data/Image/' + self.gender
 
-    def to_main_window(self):
-        self.manager.transition.direction = 'right'
-        self.manager.current = 'menu_window'
-        self.path = 'Data/Image/' + self.gender
+        )
+        self.menu.open()
 
-    def back_to_gender(self):
-        self.manager.get_screen('clothes_window').slide.load_previous()
-        self.path = 'Data/Image/'
+    def menu_callback(self, style):
+        self.drop_down.text = style
+        self.menu.dismiss()
+        self.box.clear_widgets()
+        self.add_images()
+
+    def add_images(self):
+        style =  self.drop_down.text
+        if self.gender.icon == 'gender-male':
+            gender = 'man'
+        else:
+            gender = 'woman'
+        feels_like = self.manager.get_screen('menu_window').feels_like
+        self.blank.text = ''
+        if style == 'Стиль':
+            images_path= []
+            for style in style_fldr:
+                images = os.listdir(f"Data/Image/{gender}/{style}/{feels_like}")
+                for image in images:
+                    images_path += [f"Data/Image/{gender}/{style}/{feels_like}/{image}"]
+
+            if len(images_path) != 0:
+                for i in range(len(images_path)):
+                    hero_item = HeroItem(
+                        text=f"Item {i + 1}", tag=f"tag_{i}", manager=self.manager,
+                        source= images_path[i],
+                        screen='clothes_image2')
+                    if not i % 2:
+                        hero_item.md_bg_color = "lightgrey"
+                    self.box.add_widget(hero_item)
+            else:
+                self.blank.text = 'В вашей библиотеке отсутствуют изображения одежды, подхожящие для данных погодных условий.'
+        else:
+            images_path = f"Data/Image/{gender}/{style}/{feels_like}"
+            images_list = os.listdir(images_path)
+            if len(images_list)!=0:
+                for i in range(len(images_list)):
+                    hero_item = HeroItem(
+                        text=f"Item {i + 1}", tag=f"tag_{i}", manager=self.manager, source=f"{images_path}/{images_list[i]}",
+                        screen = 'clothes_image2')
+                    if not i % 2:
+                        hero_item.md_bg_color = "lightgrey"
+                    self.box.add_widget(hero_item)
+            else:
+                self.blank.text = 'В вашей библиотеке отсутствуют изображения одежды, подхожящие для данных погодных условий.'
+
 
 
 class Clothes2(MDScreen):
@@ -570,7 +675,6 @@ class Clothes2(MDScreen):
 
     def current(self):
         self.manager.current = 'clothes_window'
-        self.manager.transition.direction = 'right'
         self.manager.get_screen('clothes_window').current()
         self.blank.text = ''
         self.box.clear_widgets()
@@ -585,7 +689,16 @@ class CameraScreen(MDScreen):
     def enter(self):
         pass
     def on_enter(self, *args):
-        self.camera.play = True
+        self.capture = cv2.VideoCapture(0)
+        Clock.schedule_interval(self.load_video, 1 / 30)
+
+    def load_video(self, *args):
+        ret, frame = self.capture.read()
+        self.image_frame = frame
+        buffer = cv2.flip(frame, 0).tobytes()
+        texture = Texture.create(size = (frame.shape[1], frame.shape[0]), colorfmt ='bgr')
+        texture.blit_buffer(buffer, colorfmt = 'bgr', bufferfmt = 'ubyte')
+        self.image.texture = texture
     def drp_down(self):
         menu_items = [
             {
@@ -635,12 +748,11 @@ class CameraScreen(MDScreen):
             feels_like = self.manager.get_screen('menu_window').feels_like
             name = f'PNG_{strftime("%Y%m%d_%H%M%S")}.png'
             path = f'Data/Image/my library/{self.drop_down.text}/{feels_like}/{name}'
-            self.camera.export_to_png(f'Data/Image/my library/{self.drop_down.text}/{feels_like}/{name}')
+            cv2.imwrite(f'Data/Image/my library/{self.drop_down.text}/{feels_like}/{name}', self.image_frame)
             with open(path, 'rb') as img:
                 img = img.read()
             send = Client(operation='adding_image', filename=name, feels_like=feels_like, style=self.drop_down.text,
-                          file=img, email=self.manager.get_screen('menu_window').ids.email.text)
-            send.start()
+                          file=img, email=self.manager.get_screen('menu_window').ids.email.text).task2()
         # send = send.task()
 
 
@@ -695,9 +807,8 @@ class Place(MDScreen):
         self.search.background_normal = path[0]
         self.search.background_down = path[0]
         self.geo = [self.manager.get_screen('menu_window').ids.lat.text, self.manager.get_screen('menu_window').ids.lon.text]
-        places = Client(operation='geo_loc', geo=self.geo, name = name)
-        places.start()
-        places = json.loads(places.task())
+        places = Client(operation='geo_loc', geo=self.geo, name = name).task2()
+        places = json.loads(places)
         for i in range(len(places)):
             lat =places[i]['coordinates'][0]
             lon = places[i]['coordinates'][1]
@@ -725,9 +836,8 @@ class Place(MDScreen):
         self.fl2.canvas.add(Color(.45,.70,.83))
         self.list_of_lines = []
         self.route_points = []
-        self.res1 = Client(operation='geo_cod', start_lon=start_lon, start_lat=start_lat,end_lon= end_lon, end_lat= end_lat )
-        self.res1.start()
-        self.res1 = json.loads(self.res1.task())['cod']
+        self.res1 = Client(operation='geo_cod', start_lon=start_lon, start_lat=start_lat,end_lon= end_lon, end_lat= end_lat ).task2()
+        self.res1 = json.loads(self.res1)['cod']
         for i in range(0, len(self.res1) - 1, 2):
             self.points_lat = self.res1[i]
             self.points_lon = self.res1[i + 1]
@@ -766,8 +876,11 @@ class HeroItem(MDHeroFrom):
     screen = StringProperty()
     def on_release(self):
         self.manager.get_screen(self.screen).enter(self.source)
-        self.manager.transition.direction = 'left'
         self.manager.current = self.screen
+
+
+class NavBar(MDFloatLayout):
+    pass
 
 
 class Content(object):
@@ -810,19 +923,30 @@ class Content(object):
         self.dialog2.open()
 
 
+Window.size =(416/0.9, 901/0.9)
+
 
 class MainApp(MDApp):
-
     def on_start(self):
         global geo
-        try:
+        if platform =='android':
+            from android.permissions import request_permissions, Permission
+            request_permissions([
+                Permission.INTERNET,
+                Permission.CAMERA,
+                Permission.WRITE_EXTERNAL_STORAGE,
+                Permission.READ_EXTERNAL_STORAGE,
+                Permission.ACCESS_FINE_LOCATION,
+                Permission.ACCESS_COARSE_LOCATION
+
+            ])
             def print_locations(**geo):
                 return [geo['lat'], geo['lon']]
 
             geo = gps.configure(on_location=print_locations)
             gps.start()
             gps.stop()
-        except:
+        else:
             geo = requests.get('https://ipinfo.io/json').json()
             geo = geo['loc'].split(',')
 
@@ -830,8 +954,21 @@ class MainApp(MDApp):
         self.theme_cls.theme_style = "Dark"
         self.theme_cls.primary_palette = "Orange"
         sm_file = Builder.load_file('manager.kv')
-
         return sm_file
+
+    def anim(self,pos, *args):
+        animation = Animation(pos_hint={'center_y': pos}, duration=0.2)
+        animation.start(self.root.bar)
+
+    def change_color(self, instance):
+        if instance in self. root.ids.values():
+            current_id = list(self.root.ids.keys())[list(self.root.ids.values()).index(instance)]
+            for i in range(5):
+                if f'nav_icon{i+1}' == current_id:
+                   self.root.ids[f'nav_icon{i+1}'].text_color = 'gray'
+                else:
+                    self.root.ids[f'nav_icon{i + 1}'].text_color = 1, 1, 1, 1
+
 
 
 if __name__ == '__main__':

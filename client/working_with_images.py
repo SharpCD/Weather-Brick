@@ -15,20 +15,18 @@ class WorkingWithImages(object):
 
     def add_images(self, email):
         images = Client(operation = 'send_images', email = email)
-        images.start()
-        count = int(images.task())
+        count = int(images.task2())
         print(count)
-        try:
-            for i in range(count):
-                img_inf = images.task()
-                print(img_inf)
-                img_inf = json.loads(img_inf)
-                img_file = images.task()
-                with open(f'Data/Image/my library/{img_inf["style"]}/{img_inf["feels_like"]}/{img_inf["filename"]}', 'wb') as file:
-                    file.write(img_file)
-        except:
-            pass
+
+        for i in range(count):
+            img_inf = images.task()
+            img_inf = json.loads(img_inf)
+            print(img_inf)
+            img_file = images.task()
+            # print(img_file)
+            with open(f'Data/Image/my library/{img_inf["style"]}/{img_inf["feels_like"]}/{img_inf["filename"]}', 'wb') as file:
+                file.write(img_file)
 
 # a = WorkingWithImages().add_images('kuchuk758@mail.ru')
 # b = WorkingWithImages().remove_iamges()
-#
+# #
