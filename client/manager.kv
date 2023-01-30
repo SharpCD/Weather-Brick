@@ -776,7 +776,7 @@ MDFloatLayout:
                     radius: [root.height//60,root.height// 60, root.height//60, root.height//60]
 
         ScrollView:
-            size_hint:(1, .2)
+            size_hint:(1, .18)
             pos_hint: {'center_x': .5, 'center_y': .18}
             do_scroll_x: True
             do_scroll_y: False
@@ -784,8 +784,8 @@ MDFloatLayout:
                 id: gl
                 size_hint_x: None
                 cols:10
-                spacing: root.width//10
-                height:root.height//20
+                spacing: root.width//30
+                height:root.height//30
                 width: self.minimum_width
 
         MDNavigationDrawer:
@@ -944,7 +944,6 @@ MDFloatLayout:
         Camera:
             id: camera
             size_hint: (1, 1)
-            resolution: (1080, 1920)
             play: False
             allow_stretch: True
             keep_ratio: True

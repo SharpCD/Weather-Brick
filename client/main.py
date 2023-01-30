@@ -1,6 +1,7 @@
 import time
 
 from kivy.graphics import Rectangle, Color, Line, Bezier, Ellipse, Triangle
+from kivy.uix.label import Label
 from kivy.uix.screenmanager import NoTransition
 from kivymd.app import MDApp
 from kivymd.uix.behaviors import FakeRectangularElevationBehavior
@@ -401,9 +402,11 @@ class MenuWindow(MDScreen):
         back = f'Data/Image/{dir}/background.png'
         self.back.source = back
         color_card = city['color_card']
+
         self.gl.clear_widgets()
         for i in range(10):
-            self.gl.add_widget(MDLabel(
+            print(self.forecast_city[i][0])
+            self.gl.add_widget(Label(
                 size_hint_x=None,
                 halign='center',
                 text=self.forecast_city[i][0],
@@ -414,7 +417,7 @@ class MenuWindow(MDScreen):
                 source=self.forecast_city[i][2]
             ))
         for i in range(10):
-            self.gl.add_widget(MDLabel(
+            self.gl.add_widget(Label(
                 size_hint_x=None,
                 halign='center',
                 text=self.forecast_city[i][1],
@@ -722,7 +725,23 @@ class CameraScreen(MDScreen):
         self.menu.dismiss()
 
     def take_photo_function(self, *args):
-        if self.drop_down.text == 'Выберите стиль':
+        with open('registration.bin', 'rb') as file:
+            inf = file.read().decode()
+        if inf == 'skip':
+            Snackbar(
+                text="  Войдите в аккаунт",
+                snackbar_animation_dir='Top',
+                bg_color='#CF5A5D',
+                shadow_color='#CF5A5D',
+                font_size=Window.height // 44,
+                snackbar_x="10dp",
+                snackbar_y=f"{Window.height // 1.1}dp",
+                radius=[self.height // 60, self.height // 60, self.height // 60, self.height // 65],
+                size_hint_x=(
+                                    Window.width - (dp(10) * 2)
+                            ) / Window.width
+            ).open()
+        elif self.drop_down.text == 'Выберите стиль':
             Snackbar(
                 text="  Выберите стиль",
                 snackbar_animation_dir='Top',
@@ -763,8 +782,6 @@ class Place(MDScreen):
         # self.map.lat = int(sm.get_screen('menu_window').lat)
         # self.map.lon = int(sm.get_screen('menu_window').lon)
 
-    def a(self, *args):
-        pass
 
     def category(self):
         category_menu = {
@@ -1023,16 +1040,27 @@ Window.size = (416 / 0.9, 901 / 0.9)
 class MainApp(MDApp):
     def on_start(self):
         global geo
+        geo = None
         if platform == 'android':
-            def print_locations(**geo):
-                return [geo['lat'], geo['lon']]
+            try:
+                gps.configure(on_location=self.print_locations)
+                gps.start()
+            except:
+                geo = requests.get('https://ipinfo.io/json').json()
+                geo = geo['loc'].split(',')
 
-            geo = gps.configure(on_location=print_locations)
-            gps.start()
-            gps.stop()
         else:
             geo = requests.get('https://ipinfo.io/json').json()
             geo = geo['loc'].split(',')
+
+    def print_locations(self, **geo1):
+        global geo
+        geo = [str(geo1['lat']), str(geo1['lon'])]
+        if geo == None:
+            geo = requests.get('https://ipinfo.io/json').json()
+            geo = geo['loc'].split(',')
+
+
 
     def build(self):
         if platform == 'android':
@@ -1045,9 +1073,7 @@ class MainApp(MDApp):
                 Permission.ACCESS_FINE_LOCATION,
                 Permission.ACCESS_COARSE_LOCATION
             ])
-            from android.storage import primary_external_storage_path
-            global primary_ext_storage
-            primary_ext_storage = primary_external_storage_path()
+
         self.theme_cls.theme_style = "Dark"
         self.theme_cls.primary_palette = "Orange"
         sm_file = Builder.load_file('manager.kv')
