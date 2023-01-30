@@ -17,7 +17,7 @@
         id: tag_0
         radius: 24
         box_radius: 0, 0, 24, 24
-        box_color: 0, 0, 0, .5
+        box_color: 0, 0, 0, 0
         source: root.source
         size_hint: None, None
         size: root.size
@@ -42,15 +42,14 @@ MDFloatLayout:
         SignUp:
         EmailConfirmation:
         MenuWindow:
-        LibrarySelection:
         MyClothesWindow:
         ClothesWindow:
         ClothesImage:
         ClothesImage2:
         CameraScreen:
         Place:
-        Clothes:
-        Clothes2:
+        UploadingImages:
+
     NavBar:
         id: bar
         size_hint: .95, .06
@@ -59,7 +58,7 @@ MDFloatLayout:
             md_bg_color: 0,0,0,1
             pos_hint:{'center_x': .5, 'center_y': .07}
             opacity: .12
-            radius: [16]
+            radius: [self.height//4]
         MDBoxLayout:
             size_hint: .8, 1
             pos_hint:{'center_x': .5, 'center_y': 0}
@@ -151,7 +150,7 @@ MDFloatLayout:
             size_hint: (.9, .37)
             pos_hint:{'center_x': .5, 'center_y': .5}
             md_bg_color:rgba(196, 191, 196, 255)
-            radius: [20, 20, 20, 20]
+            radius: [self.height//20]
             Carousel:
                 id: slide
                 min_move: 10
@@ -290,7 +289,7 @@ MDFloatLayout:
             size_hint: (.9, .37)
             pos_hint:{'center_x': .5, 'center_y': .5}
             md_bg_color:rgba(51,52,98, 255)
-            radius: [20, 20, 20, 20]
+            radius: [self.height//20]
 
             Carousel:
                 id: slide
@@ -535,7 +534,7 @@ MDFloatLayout:
                 RoundedRectangle:
                     pos: self.pos
                     size: self.size
-                    radius: [20, 20, 20, 20]
+                    radius: [self.height//20]
             MDLabel:
                 id: email_conf
                 halign: 'center'
@@ -653,6 +652,8 @@ MDFloatLayout:
                 root.manager.get_screen('place').ids.search.background_normal ="Data/Image//search.png"
                 root.manager.get_screen('place').ids.search.background_down ="Data/Image//search.png"
                 root.manager.get_screen('place').ids.text1.text ='Выберете категорию'
+                root.manager.get_screen('place').ids.slide.size_hint = (.9, .5)
+                root.manager.get_screen('place').ids.slide.pos_hint = {'center_x': .5, 'center_y': .35}
         MDFloatLayout:
             size_hint: (.6, .044)
             pos_hint:{'x': .2, 'y': .88}
@@ -783,8 +784,8 @@ MDFloatLayout:
                 id: gl
                 size_hint_x: None
                 cols:10
-                spacing: root.height//40
-                height:root.width//20
+                spacing: root.width//40
+                height:root.height//20
                 width: self.minimum_width
 
         MDNavigationDrawer:
@@ -837,49 +838,7 @@ MDFloatLayout:
 
 
 
-<LibrarySelection>
-    name:'library_selection'
-    back:back
-    text:text
-    arrow1:arrow1
-    MDFloatLayout:
-        FitImage
-            id: back
-            source: ''
-        MDIconButton:
-            id: arrow1
-            icon: 'arrow-left'
-            pos_hint:{ 'center_x': .1, 'center_y': .95}
-            icon_size:root.height // 18
-            on_release:
-                root.manager.current = 'menu_window'
-        MDLabel:
-            halign: 'center'
-            id: text
-            text:'Выберите библиотеку изображений'
-            font_size:Window.height // 22
-            pos_hint:{ 'center_x': .5, 'center_y': .87}
 
-        MDRoundFlatButton:
-            text: "моя библиотека"
-            font_size: root.height//50
-            theme_text_color: "Custom"
-            text_color: "white"
-            size_hint:(.8, .07)
-            pos_hint:{ 'center_x': .5, 'center_y': .58}
-            line_color: "white"
-            on_release:
-                root.checking_for_authorization()
-        MDRoundFlatButton:
-            text: "библиотека приложения"
-            font_size: root.height//50
-            theme_text_color: "Custom"
-            size_hint:(.8, .07)
-            pos_hint:{ 'center_x': .5, 'center_y': .42}
-            text_color: "white"
-            line_color: "white"
-            on_release:
-                root.manager.current = 'clothes_window'
 <MyClothesWindow>
     name: "my_clothes_window"
     back:back
@@ -975,14 +934,20 @@ MDFloatLayout:
 
 <CameraScreen>
     name: 'camera'
+    camera:camera
     image_btn:image_btn
     take_photo:take_photo
     drop_down:drop_down
-    image:image
+
 
     FloatLayout:
-        Image:
-            id: image
+        Camera:
+            id: camera
+            size_hint: (1, 1)
+            resolution: (1080, 1920)
+            play: False
+            allow_stretch: True
+            keep_ratio: True
             canvas.before:
                 PushMatrix
                 Rotate:
@@ -993,13 +958,13 @@ MDFloatLayout:
         MDIconButton:
             id: take_photo
             icon: 'checkbox-blank-circle-outline'
-            pos_hint:{ 'center_x': .5, 'center_y': .1}
+            pos_hint:{ 'center_x': .5, 'center_y': .15}
             icon_size:root.height // 12
             on_release:root.take_photo_function()
         MDIconButton:
             id: image_btn
             icon: 'image'
-            pos_hint:{ 'center_x': .8, 'center_y': .1}
+            pos_hint:{ 'center_x': .8, 'center_y': .15}
             icon_size:root.height // 22
             on_release:
         MDDropDownItem:
@@ -1020,6 +985,7 @@ MDFloatLayout:
     box:box
     fl:fl
     slide:slide
+
     MDFloatLayout:
 
         FitImage:
@@ -1033,28 +999,6 @@ MDFloatLayout:
             text: 'Выберите категорию'
             pos_hint:{ 'center_x': .5, 'center_y': .9}
             font_size:root.height / 20
-
-        Carousel:
-            id: slide
-            min_move: 10
-
-            MDFloatLayout:
-                size_hint: (1, .6)
-                pos_hint:{'center_x': .55, 'center_y': .3}
-                MDScrollView:
-                    pos_hint:{'center_x': .5, 'center_y': .5}
-                    do_scroll_x: False
-                    do_scroll_y: True
-                    MDBoxLayout:
-                        id:box
-                        size_hint_y: None
-                        size_hint_x: .9
-                        height: self.minimum_height
-                        halign: 'center'
-                        orientation: 'vertical'
-            MDFloatLayout
-                id:fl
-
 
         Button:
             id: search
@@ -1080,7 +1024,9 @@ MDFloatLayout:
                 RoundedRectangle:
                     pos: self.pos
                     size: self.size
-                    radius: [16, 16, 16, 16]
+                    radius: [self.height//2.5]
+
+
 
         MDBoxLayout:
             pos_hint:{'center_x': .5, 'center_y': .72}
@@ -1105,86 +1051,29 @@ MDFloatLayout:
                 on_release:
                     root.segmented_control(switching, 0.675)
                     root.slide.load_next(mode='next')
+        Carousel:
+            id: slide
+            min_move: 10
+            size_hint: (.9, .5)
+            pos_hint:{'center_x': .5, 'center_y': .35}
+            MDFloatLayout:
+                MDScrollView:
+                    pos_hint:{'center_x': .55, 'center_y': .5}
+                    do_scroll_x: False
+                    do_scroll_y: True
+                    MDBoxLayout:
+                        id:box
+                        size_hint_y: None
+                        size_hint_x: .9
+                        height: self.minimum_height
+                        halign: 'center'
+                        orientation: 'vertical'
+            MDFloatLayout:
+                MDFloatLayout:
+                    id:fl
+                    pos_hint:{'center_x': .5, 'center_y': .5}
 
 
-<Clothes>
-    name: 'clothes'
-    box:box
-    back: back
-    bar:bar
-    blank:blank
-    FitImage:
-        id: back
-        source: ''
-
-    MDLabel:
-        id: blank
-        font_size:root.height / 30
-        text: ''
-        halign:'center'
-
-    ScrollView:
-        MDGridLayout:
-            id: box
-            pos_hint:{ 'center_x': .5, 'center_y': .2}
-            cols: 2
-            spacing: "12dp"
-            padding: "12dp"
-            adaptive_height: True
-
-    MDBottomAppBar:
-        MDTopAppBar:
-            id: bar
-            md_bg_bottom_color: 'white'
-            left_action_items: [["arrow-left", lambda x: root.current()]]
-            theme_icon_color: "Custom"
-            icon: "home"
-            on_action_button:
-                root.manager.current = 'menu_window'
-                root.box.clear_widgets()
-                root.blank.text = ''
-            title: "Title"
-            icon_color: self.md_bg_bottom_color
-            type: "bottom"
-
-<Clothes2>
-    name: 'clothes2'
-    box:box
-    back: back
-    bar:bar
-    blank:blank
-    FitImage:
-        id: back
-        source: ''
-
-    MDLabel:
-        id: blank
-        font_size:root.height / 30
-        text: ''
-        halign:'center'
-
-    ScrollView:
-        MDGridLayout:
-            id: box
-            pos_hint:{ 'center_x': .5, 'center_y': .2}
-            cols: 2
-            spacing: "12dp"
-            padding: "12dp"
-            adaptive_height: True
-
-    MDBottomAppBar:
-        MDTopAppBar:
-            id: bar
-            md_bg_bottom_color: 0, 1, 0, 1
-            left_action_items: [["arrow-left", lambda x: root.current()]]
-            icon: "home"
-            on_action_button:
-                root.manager.get_screen('clothes_window').to_main_window()
-                root.box.clear_widgets()
-                root.blank.text = ''
-            title: "Title"
-            icon_color: self.md_bg_bottom_color
-            type: "bottom"
 <ClothesImage>
     name: 'clothes_image'
     back: back
@@ -1211,8 +1100,35 @@ MDFloatLayout:
         on_release:
             root.manager.current = 'clothes_window'
 
-
-
-
+<UploadingImages>
+    name: 'uploading_images'
+    icon:icon
+    back:back
+    progress:progress
+    inf:inf
+    on_enter:
+        app.anim(0)
+    MDFloatLayout:
+        FitImage:
+            id: back
+            source: ''
+        FitImage:
+            id: icon
+            source: 'Data/Image/icon_loading.png'
+            size_hint:(.12* root.height / root.width, .12)
+            pos_hint: {'center_x': 0.5, 'center_y': 0.67 }
+        MDProgressBar:
+            id: progress
+            type: "determinate"
+            running_duration: 1
+            catching_duration: 1.5
+            pos_hint: {'center_x': .5, "center_y": .6}
+            size_hint_x: .8
+        MDLabel:
+            halign: 'center'
+            id: inf
+            font_size:root.height / 50
+            text: 'Загружено'
+            pos_hint:{'center_x': .5, 'center_y': .56}
 
 
